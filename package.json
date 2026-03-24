@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/run-unit-tests.ts",
+    "check": "powershell -ExecutionPolicy Bypass -File scripts/release-guardrails.ps1"
   },
   "dependencies": {
     "next": "latest",
