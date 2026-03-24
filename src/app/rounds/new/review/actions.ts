@@ -1,0 +1,24 @@
+"use server";
+
+import { randomUUID } from "node:crypto";
+
+import {
+  isRoundEntryDraftComplete,
+  type RoundEntryDraft,
+} from "@/lib/round-entry";
+import { saveRound } from "@/lib/round-repository";
+import { scoreRoundDraft } from "@/lib/score-round";
+
+export async function saveRoundDraftAction(draft: RoundEntryDraft) {
+  if (!isRoundEntryDraftComplete(draft)) {
+    throw new Error("Round draft is incomplete.");
+  }
+
+  const now = new Date().toISOString();
+  const roundId = randomUUID();
+  const scoredRound = scoreRoundDraft(draft, roundId, now);
+
+  await saveRound(scoredRound);
+
+  return { roundId };
+}

@@ -1,0 +1,7 @@
+.next/
+.next-build-check/
+node_modules/
+out/
+*.log
+_bmad/
+package/
