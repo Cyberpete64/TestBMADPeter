@@ -18,13 +18,13 @@ export function FrontNineSetupSummary() {
   if (!setup) {
     return (
       <div className="empty-card">
-        <h2>No round setup found.</h2>
+        <h2>Ingen rondinställning hittades.</h2>
         <p className="muted">
-          Start with the setup step before continuing into front nine.
+          Börja med inställningssteget innan du fortsätter till fram 9.
         </p>
         <div className="actions-row">
           <Link className="button" href="/rounds/new">
-            Go to Round Setup
+            Gå till rondinställning
           </Link>
         </div>
       </div>
@@ -33,26 +33,26 @@ export function FrontNineSetupSummary() {
 
   return (
     <div className="page-stack">
-      <div className="step-progress" aria-label="Round progress">
-        <span className="pill">Step 1 of 3 complete</span>
+      <div className="step-progress" aria-label="Rondens framsteg">
+        <span className="pill">Steg 1 av 3 klart</span>
         <div className="step-progress__track" aria-hidden="true">
           <div className="step-progress__fill" style={{ width: "34%" }} />
         </div>
       </div>
 
       <div className="detail-card">
-        <h2>Setup summary</h2>
+        <h2>Sammanfattning av inställningar</h2>
         <div className="summary-list">
           <div className="summary-row">
-            <span className="muted">Player</span>
+            <span className="muted">Spelare</span>
             <strong>{setup.playerName}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Played date</span>
+            <span className="muted">Speldatum</span>
             <strong>{setup.playedOn}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Course</span>
+            <span className="muted">Bana</span>
             <strong>{setup.courseLabel}</strong>
           </div>
           <div className="summary-row">
@@ -60,21 +60,21 @@ export function FrontNineSetupSummary() {
             <strong>{setup.teeLabel}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Entered handicap</span>
+            <span className="muted">Registrerat handicap</span>
             <strong>{setup.enteredHandicap}</strong>
           </div>
         </div>
       </div>
 
       <div className="detail-card">
-        <h2>What comes next</h2>
+        <h2>Vad händer härnäst?</h2>
         <p className="muted">
-          The next slice will replace this handoff page with hole cards for
-          strokes and putts on holes 1 to 9.
+          Nästa del ersätter den här mellanvyn med hålkort för slag och puttar
+          på hål 1 till 9.
         </p>
         <div className="actions-row">
           <Link className="button" href="/rounds/new">
-            Edit Setup
+            Redigera inställning
           </Link>
         </div>
       </div>

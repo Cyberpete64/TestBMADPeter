@@ -11,27 +11,27 @@ export default async function RoundsPage() {
     <div className="page-stack">
       <section className="page-card">
         <div className="step-header">
-          <span className="pill">Round history</span>
-          <h1 className="page-title">Saved rounds</h1>
+          <span className="pill">Rondhistorik</span>
+          <h1 className="page-title">Sparade ronder</h1>
           <p className="page-intro">
-            Review every saved round, then open the scorecard or jump straight
-            into edits.
+            Gå igenom alla sparade ronder och öppna scorekortet eller hoppa
+            direkt till redigering.
           </p>
         </div>
       </section>
 
       {rounds.length === 0 ? (
         <section className="empty-card">
-          <h2>No saved rounds yet.</h2>
+          <h2>Inga sparade ronder ännu.</h2>
           <p className="page-intro">
-            Save your first full round and it will appear here automatically.
+            Spara din första fulla rond så visas den här automatiskt.
           </p>
           <div className="actions-row">
             <Link className="button" href="/rounds/new">
-              Start a New Round
+              Starta ny rond
             </Link>
             <Link className="button-secondary" href="/">
-              Back to Dashboard
+              Tillbaka till översikten
             </Link>
           </div>
         </section>
@@ -43,13 +43,13 @@ export default async function RoundsPage() {
                 <div className="history-item__top">
                   <div>
                     <h2 className="history-item__title">
-                      {round.playerName} at {round.courseShortLabel}
+                      {round.playerName} på {round.courseShortLabel}
                     </h2>
                     <p className="muted">
                       {round.playedOn} / {round.teeLabel}
                     </p>
                   </div>
-                  <span className="pill">{round.totalScore} strokes</span>
+                  <span className="pill">{round.totalScore} slag</span>
                 </div>
 
                 <div className="history-item__stats">
@@ -58,7 +58,7 @@ export default async function RoundsPage() {
                     <strong>{round.totalStablefordPoints}</strong>
                   </div>
                   <div>
-                    <div className="stat-label">Putts</div>
+                    <div className="stat-label">Puttar</div>
                     <strong>{round.totalPutts}</strong>
                   </div>
                   <div>
@@ -69,10 +69,10 @@ export default async function RoundsPage() {
 
                 <div className="actions-row">
                   <Link className="button-secondary" href={`/rounds/${round.id}`}>
-                    View Scorecard
+                    Visa scorekort
                   </Link>
                   <Link className="button-secondary" href={`/rounds/${round.id}/edit`}>
-                    Edit Round
+                    Redigera rond
                   </Link>
                 </div>
               </article>

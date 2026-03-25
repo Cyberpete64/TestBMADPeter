@@ -44,7 +44,7 @@ export function RoundReviewHandoff() {
     }
 
     if (!isRoundEntryDraftComplete(draft)) {
-      setSaveError("Complete all 18 holes before saving the round.");
+      setSaveError("Fyll i alla 18 hål innan du sparar ronden.");
       return;
     }
 
@@ -58,7 +58,7 @@ export function RoundReviewHandoff() {
         router.push(`/rounds/${result.roundId}`);
       } catch {
         setSaveError(
-          "The round could not be saved right now. Please try again.",
+          "Ronden kunde inte sparas just nu. Försök igen.",
         );
       }
     });
@@ -67,14 +67,14 @@ export function RoundReviewHandoff() {
   if (!draft) {
     return (
       <div className="empty-card">
-        <h2>No hole entry draft found.</h2>
+        <h2>Inget rondutkast hittades.</h2>
         <p className="muted">
-          Complete round setup and hole entry before reviewing and saving the
-          round.
+          Slutför rondinställningen och hålregistreringen innan du granskar och
+          sparar ronden.
         </p>
         <div className="actions-row">
           <Link className="button" href="/rounds/new">
-            Go to Round Setup
+            Gå till rondinställning
           </Link>
         </div>
       </div>
@@ -85,26 +85,26 @@ export function RoundReviewHandoff() {
 
   return (
     <div className="page-stack">
-      <div className="step-progress" aria-label="Round progress">
-        <span className="pill">Step 4 of 4</span>
+      <div className="step-progress" aria-label="Rondens framsteg">
+        <span className="pill">Steg 4 av 4</span>
         <div className="step-progress__track" aria-hidden="true">
           <div className="step-progress__fill" style={{ width: "100%" }} />
         </div>
       </div>
 
       <div className="detail-card">
-        <h2>Round entry ready to save</h2>
+        <h2>Rondregistreringen är redo att sparas</h2>
         <p className="muted">
-          Review the setup and hole totals, then save the round to calculate
-          totals and Stableford points server-side.
+          Granska inställningarna och håltotalerna och spara sedan ronden för
+          att beräkna totaler och Stablefordpoäng på serversidan.
         </p>
         <div className="summary-list">
           <div className="summary-row">
-            <span className="muted">Player</span>
+            <span className="muted">Spelare</span>
             <strong>{draft.setup.playerName}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Course</span>
+            <span className="muted">Bana</span>
             <strong>{draft.setup.courseLabel}</strong>
           </div>
           <div className="summary-row">
@@ -112,22 +112,22 @@ export function RoundReviewHandoff() {
             <strong>{draft.setup.teeLabel}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Entered handicap</span>
+            <span className="muted">Registrerat handicap</span>
             <strong>{draft.setup.enteredHandicap}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Total strokes entered</span>
+            <span className="muted">Totalt registrerade slag</span>
             <strong>{totals.strokes}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Total putts entered</span>
+            <span className="muted">Totalt registrerade puttar</span>
             <strong>{totals.putts}</strong>
           </div>
         </div>
       </div>
 
       <div className="detail-card">
-        <h2>Hole capture preview</h2>
+        <h2>Förhandsgranskning per hål</h2>
         <div className="review-grid">
           {holeReferences.map((hole) => {
             const entry = draft.holes.find(
@@ -136,10 +136,10 @@ export function RoundReviewHandoff() {
 
             return (
               <div className="review-grid__item" key={hole.holeNumber}>
-                <strong>Hole {hole.holeNumber}</strong>
-                <span className="muted">Par {hole.par} / SI {hole.strokeIndex}</span>
-                <span>Strokes: {entry?.strokes || "-"}</span>
-                <span>Putts: {entry?.putts || "-"}</span>
+                <strong>Hål {hole.holeNumber}</strong>
+                <span className="muted">Par {hole.par} / HCP {hole.strokeIndex}</span>
+                <span>Slag: {entry?.strokes || "-"}</span>
+                <span>Puttar: {entry?.putts || "-"}</span>
               </div>
             );
           })}
@@ -154,7 +154,7 @@ export function RoundReviewHandoff() {
 
       <div className="sticky-action sticky-action--split">
         <Link className="button-secondary" href="/rounds/new/back-nine">
-          Back to Back 9
+          Tillbaka till Bak 9
         </Link>
         <button
           className="button"
@@ -162,7 +162,7 @@ export function RoundReviewHandoff() {
           onClick={handleSaveRound}
           type="button"
         >
-          {isPending ? "Saving Round..." : "Save Round"}
+          {isPending ? "Sparar rond..." : "Spara rond"}
         </button>
       </div>
     </div>

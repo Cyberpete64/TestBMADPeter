@@ -11,19 +11,19 @@ import {
 } from "@/lib/round-setup";
 
 const roundSetupSchema = z.object({
-  playerName: z.string().trim().min(1, "Enter the player name."),
-  playedOn: z.string().trim().min(1, "Choose the played date."),
+  playerName: z.string().trim().min(1, "Ange spelarens namn."),
+  playedOn: z.string().trim().min(1, "Välj speldatum."),
   courseSlug: z.literal(primaryCourse.slug),
   teeCode: z.enum(["red", "yellow"]),
   enteredHandicap: z
     .string()
     .trim()
-    .min(1, "Enter your handicap.")
+    .min(1, "Ange ditt handicap.")
     .refine((value) => !Number.isNaN(Number(value)), {
-      message: "Handicap must be a number.",
+      message: "Handicap måste vara ett tal.",
     })
     .refine((value) => Number(value) >= 0, {
-      message: "Handicap cannot be negative.",
+      message: "Handicap kan inte vara negativt.",
     }),
 });
 
@@ -80,7 +80,7 @@ export function RoundSetupForm() {
       }
 
       setFieldErrors(nextErrors);
-      setFormError("Complete the required setup fields before continuing.");
+      setFormError("Fyll i de obligatoriska fälten innan du fortsätter.");
       return;
     }
 
@@ -89,7 +89,7 @@ export function RoundSetupForm() {
     );
 
     if (!selectedTee) {
-      setFormError("The selected tee is not available.");
+      setFormError("Den valda teen är inte tillgänglig.");
       return;
     }
 
@@ -110,15 +110,15 @@ export function RoundSetupForm() {
 
   return (
     <form className="form-grid" noValidate onSubmit={handleSubmit}>
-      <div className="step-progress" aria-label="Round setup progress">
-        <span className="pill">Step 1 of 4</span>
+      <div className="step-progress" aria-label="Rondens inställningssteg">
+        <span className="pill">Steg 1 av 4</span>
         <div className="step-progress__track" aria-hidden="true">
           <div className="step-progress__fill" style={{ width: "20%" }} />
         </div>
       </div>
 
       <div className="field">
-        <label htmlFor="playerName">Player name</label>
+        <label htmlFor="playerName">Spelare</label>
         <input
           id="playerName"
           name="playerName"
@@ -137,13 +137,13 @@ export function RoundSetupForm() {
           </div>
         ) : (
           <div className="field__hint" id="playerName-hint">
-            One player per round in MVP.
+            En spelare per rond i MVP-versionen.
           </div>
         )}
       </div>
 
       <div className="field">
-        <label htmlFor="playedOn">Played date</label>
+        <label htmlFor="playedOn">Speldatum</label>
         <input
           id="playedOn"
           name="playedOn"
@@ -163,7 +163,7 @@ export function RoundSetupForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="courseSlug">Course</label>
+        <label htmlFor="courseSlug">Bana</label>
         <select
           id="courseSlug"
           name="courseSlug"
@@ -174,7 +174,7 @@ export function RoundSetupForm() {
           <option value={primaryCourse.slug}>{primaryCourse.displayName}</option>
         </select>
         <div className="field__hint" id="courseSlug-hint">
-          MVP scope starts with {primaryCourse.shortLabel}.
+          MVP-versionen startar med {primaryCourse.shortLabel}.
         </div>
       </div>
 
@@ -204,12 +204,12 @@ export function RoundSetupForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="enteredHandicap">Entered handicap</label>
+        <label htmlFor="enteredHandicap">Registrerat handicap</label>
         <input
           id="enteredHandicap"
           name="enteredHandicap"
           inputMode="decimal"
-          placeholder="e.g. 18.4"
+          placeholder="t.ex. 18,4"
           aria-describedby={buildDescribedByIds(
             fieldErrors.enteredHandicap ? "enteredHandicap-error" : undefined,
             fieldErrors.enteredHandicap ? undefined : "enteredHandicap-hint",
@@ -226,7 +226,7 @@ export function RoundSetupForm() {
           </div>
         ) : (
           <div className="field__hint" id="enteredHandicap-hint">
-            This value is stored with the round and used in MVP scoring.
+            Värdet sparas med ronden och används i MVP-beräkningen.
           </div>
         )}
       </div>
@@ -239,7 +239,7 @@ export function RoundSetupForm() {
 
       <div className="sticky-action">
         <button className="button" disabled={!isValid} type="submit">
-          Continue to Front 9
+          Fortsätt till Fram 9
         </button>
       </div>
     </form>

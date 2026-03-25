@@ -3,5 +3,8 @@
 node_modules/
 out/
 *.log
+.agents/
+tsconfig.tsbuildinfo
 _bmad/
+_bmad-output/
 package/

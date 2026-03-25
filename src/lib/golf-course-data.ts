@@ -10,9 +10,10 @@ export const primaryCourse = {
 primaryCourse.displayName = primaryCourseDisplayName;
 primaryCourse.shortLabel = primaryCourseShortLabel;
 
+
 export const availableTees = [
-  { code: "yellow", label: "Yellow tee" },
-  { code: "red", label: "Red tee" },
+  { code: "yellow", label: "Gul tee" },
+  { code: "red", label: "Röd tee" },
 ] as const;
 
 export type TeeCode = (typeof availableTees)[number]["code"];

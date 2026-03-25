@@ -5,6 +5,6 @@ export const primaryCourse = {
 };
 
 export const availableTees = [
-  { code: "yellow", label: "Yellow tee" },
-  { code: "red", label: "Red tee" },
+  { code: "yellow", label: "Gul tee" },
+  { code: "red", label: "Röd tee" },
 ] as const;

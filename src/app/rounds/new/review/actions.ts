@@ -11,7 +11,7 @@ import { scoreRoundDraft } from "@/lib/score-round";
 
 export async function saveRoundDraftAction(draft: RoundEntryDraft) {
   if (!isRoundEntryDraftComplete(draft)) {
-    throw new Error("Round draft is incomplete.");
+    throw new Error("Rondutkastet är inte komplett.");
   }
 
   const now = new Date().toISOString();

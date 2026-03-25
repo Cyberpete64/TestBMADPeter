@@ -113,14 +113,14 @@ export function RoundEntryStep({
       if (hole.strokes.trim() === "") {
         nextErrors[hole.holeNumber] = {
           ...nextErrors[hole.holeNumber],
-          strokes: "Enter strokes for this hole.",
+          strokes: "Ange slag för det här hålet.",
         };
       }
 
       if (hole.putts.trim() === "") {
         nextErrors[hole.holeNumber] = {
           ...nextErrors[hole.holeNumber],
-          putts: "Enter putts for this hole.",
+          putts: "Ange puttar för det här hålet.",
         };
       }
     }
@@ -128,7 +128,7 @@ export function RoundEntryStep({
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
-      setFormError("Complete strokes and putts for every hole before continuing.");
+      setFormError("Fyll i slag och puttar för varje hål innan du fortsätter.");
       return false;
     }
 
@@ -152,22 +152,22 @@ export function RoundEntryStep({
   if (!setup || !draft) {
     return (
       <div className="empty-card">
-        <h2>Round setup is required first.</h2>
-        <p className="muted">
-          Start with the setup step before entering hole-by-hole data.
-        </p>
-        <div className="actions-row">
-          <Link className="button" href="/rounds/new">
-            Go to Round Setup
-          </Link>
+          <h2>Du måste börja med rondens inställningar.</h2>
+          <p className="muted">
+          Börja med inställningssteget innan du registrerar hål för hål.
+          </p>
+          <div className="actions-row">
+            <Link className="button" href="/rounds/new">
+            Gå till rondinställning
+            </Link>
+          </div>
         </div>
-      </div>
     );
   }
 
   return (
     <form className="page-stack" noValidate onSubmit={handleSubmit}>
-      <div className="step-progress" aria-label="Round progress">
+      <div className="step-progress" aria-label="Rondens framsteg">
         <span className="pill">{progressLabel}</span>
         <div className="step-progress__track" aria-hidden="true">
           <div className="step-progress__fill" style={{ width: progressWidth }} />
@@ -184,19 +184,19 @@ export function RoundEntryStep({
         </div>
         <div className="summary-list">
           <div className="summary-row">
-            <span className="muted">Player</span>
+            <span className="muted">Spelare</span>
             <strong>{setup.playerName}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Course</span>
+            <span className="muted">Bana</span>
             <strong>{setup.courseShortLabel}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Played date</span>
+            <span className="muted">Speldatum</span>
             <strong>{setup.playedOn}</strong>
           </div>
           <div className="summary-row">
-            <span className="muted">Entered handicap</span>
+            <span className="muted">Registrerat handicap</span>
             <strong>{setup.enteredHandicap}</strong>
           </div>
         </div>
@@ -212,18 +212,18 @@ export function RoundEntryStep({
             <article className="hole-card" key={hole.holeNumber}>
               <div className="hole-card__top">
                 <div>
-                  <div className="hole-card__eyebrow">Hole {hole.holeNumber}</div>
+                  <div className="hole-card__eyebrow">Hål {hole.holeNumber}</div>
                   <div className="hole-card__title">
-                    Par {hole.par} <span className="muted">/ SI {hole.strokeIndex}</span>
+                    Par {hole.par} <span className="muted">/ HCP {hole.strokeIndex}</span>
                   </div>
                 </div>
                 <span className="pill">#{hole.holeNumber}</span>
               </div>
-              <div className="field__hint">{hole.distanceMeters} meters</div>
+              <div className="field__hint">{hole.distanceMeters} meter</div>
 
               <div className="hole-card__fields">
                 <div className="field">
-                  <label htmlFor={`strokes-${hole.holeNumber}`}>Strokes</label>
+                  <label htmlFor={`strokes-${hole.holeNumber}`}>Slag</label>
                   <input
                     id={`strokes-${hole.holeNumber}`}
                     aria-describedby={buildDescribedByIds(
@@ -252,7 +252,7 @@ export function RoundEntryStep({
                 </div>
 
                 <div className="field">
-                  <label htmlFor={`putts-${hole.holeNumber}`}>Putts</label>
+                  <label htmlFor={`putts-${hole.holeNumber}`}>Puttar</label>
                   <input
                     id={`putts-${hole.holeNumber}`}
                     aria-describedby={buildDescribedByIds(
@@ -293,7 +293,7 @@ export function RoundEntryStep({
 
       <div className="sticky-action sticky-action--split">
         <Link className="button-secondary" href={backHref}>
-          Back
+          Tillbaka
         </Link>
         <button className="button" disabled={!isStepComplete} type="submit">
           {primaryActionLabel}

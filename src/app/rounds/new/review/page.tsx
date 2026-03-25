@@ -5,11 +5,11 @@ export default function ReviewPage() {
     <div className="page-stack">
       <section className="page-card">
         <div className="step-header">
-          <span className="pill">Step 4 of 4</span>
-          <h1 className="page-title">Review captured entry before save</h1>
+          <span className="pill">Steg 4 av 4</span>
+          <h1 className="page-title">Granska registreringen innan du sparar</h1>
           <p className="page-intro">
-            Confirm the round details, then save to calculate totals and
-            Stableford points.
+            Bekräfta rondens uppgifter och spara för att beräkna totaler och
+            Stablefordpoäng.
           </p>
         </div>
         <RoundReviewHandoff />

@@ -5,22 +5,22 @@ export default function BackNinePage() {
     <div className="page-stack">
       <section className="page-card">
         <div className="step-header">
-          <span className="pill">Back 9</span>
-          <h1 className="page-title">Finish the round with back-nine entry</h1>
+          <span className="pill">Bak 9</span>
+          <h1 className="page-title">Avsluta ronden med de sista nio hålen</h1>
           <p className="page-intro">
-            Holes 10 to 18 use the same card pattern so the round flow stays
-            consistent.
+            Hål 10 till 18 använder samma kortupplägg så att flödet förblir
+            konsekvent.
           </p>
         </div>
         <RoundEntryStep
           backHref="/rounds/new/front-nine"
           holeRange={[10, 18]}
-          intro="Capture holes 10 to 18. Front-nine entries remain preserved while you finish the round."
+          intro="Registrera hål 10 till 18. Dina värden från fram 9 ligger kvar medan du avslutar ronden."
           nextHref="/rounds/new/review"
-          primaryActionLabel="Continue to Save Review"
-          progressLabel="Step 3 of 4"
+          primaryActionLabel="Fortsätt till sparöversikt"
+          progressLabel="Steg 3 av 4"
           progressWidth="72%"
-          title="Back nine"
+          title="Bak 9"
         />
       </section>
     </div>

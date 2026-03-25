@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { primaryCourse } from "@/lib/golf-course-data";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Golf Round Tracker",
-  description: "Mobile-first golf round setup and scoring tracker.",
+  title: `${primaryCourse.shortLabel} Rondtracker`,
+  description: `Mobilvänlig registrering och poängräkning för ronder på ${primaryCourse.displayName}.`,
 };
 
 export default function RootLayout({
@@ -14,24 +16,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="sv">
       <body>
         <div className="shell">
           <header className="shell__header">
             <div className="shell__header-inner">
               <Link className="shell__brand" href="/">
-                <span className="shell__eyebrow">Golf Round Tracker</span>
-                <span className="shell__title">Öfg MVP</span>
+                <span className="shell__eyebrow">Golf rondtracker</span>
+                <span className="shell__title">{primaryCourse.shortLabel} MVP</span>
               </Link>
-              <nav className="shell__nav" aria-label="Primary">
+              <nav className="shell__nav" aria-label="Primär navigering">
                 <Link className="shell__nav-link" href="/">
-                  Dashboard
+                  Översikt
                 </Link>
                 <Link className="shell__nav-link" href="/rounds/new">
-                  New Round
+                  Ny rond
                 </Link>
                 <Link className="shell__nav-link" href="/rounds">
-                  Rounds
+                  Ronder
                 </Link>
               </nav>
             </div>

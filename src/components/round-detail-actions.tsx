@@ -25,7 +25,7 @@ export function RoundDetailActions({ roundId }: RoundDetailActionsProps) {
         router.push("/");
         router.refresh();
       } catch {
-        setDeleteError("The round could not be deleted right now.");
+        setDeleteError("Ronden kunde inte tas bort just nu.");
       }
     });
   }
@@ -34,10 +34,10 @@ export function RoundDetailActions({ roundId }: RoundDetailActionsProps) {
     <div className="page-stack">
       <div className="actions-row">
         <Link className="button-secondary" href="/">
-          Back to Dashboard
+          Till översikten
         </Link>
         <Link className="button-secondary" href={`/rounds/${roundId}/edit`}>
-          Edit Round
+          Redigera rond
         </Link>
         <button
           aria-describedby="delete-round-hint"
@@ -46,18 +46,18 @@ export function RoundDetailActions({ roundId }: RoundDetailActionsProps) {
           onClick={() => setIsConfirmingDelete(true)}
           type="button"
         >
-          Delete Round
+          Ta bort rond
         </button>
       </div>
       <p className="muted" id="delete-round-hint">
-        Deleting a saved round removes it from the dashboard, history, and all
-        calculated statistics.
+        När du tar bort en sparad rond försvinner den från översikten,
+        historiken och all beräknad statistik.
       </p>
       {isConfirmingDelete ? (
         <div aria-live="assertive" className="detail-card" role="alert">
-          <h2>Delete this saved round?</h2>
+          <h2>Ta bort den här sparade ronden?</h2>
           <p className="muted">
-            This action cannot be undone once the round is deleted.
+            Åtgärden kan inte ångras när ronden väl är borttagen.
           </p>
           <div className="actions-row">
             <button
@@ -66,7 +66,7 @@ export function RoundDetailActions({ roundId }: RoundDetailActionsProps) {
               onClick={() => setIsConfirmingDelete(false)}
               type="button"
             >
-              Cancel
+              Avbryt
             </button>
             <button
               className="button-danger"
@@ -74,7 +74,7 @@ export function RoundDetailActions({ roundId }: RoundDetailActionsProps) {
               onClick={handleDeleteRound}
               type="button"
             >
-              {isPending ? "Deleting..." : "Yes, Delete Round"}
+              {isPending ? "Tar bort..." : "Ja, ta bort ronden"}
             </button>
           </div>
         </div>

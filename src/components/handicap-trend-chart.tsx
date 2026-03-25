@@ -44,15 +44,15 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
       <section className="page-card">
         <div className="detail-card__header">
           <div>
-            <span className="pill">Handicap trend</span>
-            <h2>Progress appears after your first saved round.</h2>
+            <span className="pill">Handicaptrend</span>
+            <h2>Utvecklingen syns efter din första sparade rond.</h2>
             <p className="muted">
-              Save rounds and the dashboard will chart the handicap value you
-              entered over time.
+              Spara ronder så ritar översikten upp handicapvärdet du
+              registrerat över tid.
             </p>
           </div>
           <Link className="button-secondary" href="/rounds/new">
-            Start a New Round
+            Starta ny rond
           </Link>
         </div>
       </section>
@@ -102,24 +102,24 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
     <section className="page-card">
       <div className="detail-card__header">
         <div>
-          <span className="pill">Handicap trend</span>
-          <h2>Entered handicap over time</h2>
+          <span className="pill">Handicaptrend</span>
+          <h2>Registrerat handicap över tid</h2>
           <p className="muted">
-            This tracks the handicap value saved on each round. Lower values
-            trend in the right direction.
+            Visar handicapvärdet som sparats på varje rond. Lägre värden
+            betyder att utvecklingen går åt rätt håll.
           </p>
         </div>
         <div className="trend-summary">
           <div>
-            <div className="stat-label">First</div>
+            <div className="stat-label">Första</div>
             <strong>{formatHandicap(firstPoint.handicap)}</strong>
           </div>
           <div>
-            <div className="stat-label">Latest</div>
+            <div className="stat-label">Senaste</div>
             <strong>{formatHandicap(latestPoint.handicap)}</strong>
           </div>
           <div>
-            <div className="stat-label">Change</div>
+            <div className="stat-label">Förändring</div>
             <strong>{roundedChange}</strong>
           </div>
         </div>
@@ -133,9 +133,9 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           role="img"
         >
-          <title id={titleId}>Entered handicap trend over time</title>
+          <title id={titleId}>Registrerat handicap över tid</title>
           <desc id={descriptionId}>
-            {`Handicap values from ${firstPoint.playedOn} to ${latestPoint.playedOn}. First ${formatHandicap(firstPoint.handicap)}, latest ${formatHandicap(latestPoint.handicap)}, change ${roundedChange}.`}
+            {`Handicapvärden från ${firstPoint.playedOn} till ${latestPoint.playedOn}. Första ${formatHandicap(firstPoint.handicap)}, senaste ${formatHandicap(latestPoint.handicap)}, förändring ${roundedChange}.`}
           </desc>
           <line
             className="trend-chart__axis"

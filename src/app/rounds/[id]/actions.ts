@@ -15,13 +15,13 @@ export async function updateRoundDraftAction(
   draft: RoundEntryDraft,
 ) {
   if (!isRoundEntryDraftComplete(draft)) {
-    throw new Error("Round draft is incomplete.");
+    throw new Error("Rondutkastet är inte komplett.");
   }
 
   const existingRound = await getRoundById(roundId);
 
   if (!existingRound) {
-    throw new Error("Round not found.");
+    throw new Error("Ronden hittades inte.");
   }
 
   const normalizedDraft = normalizeDraftCourseMetadata(draft);

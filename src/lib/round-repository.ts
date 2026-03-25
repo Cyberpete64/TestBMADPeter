@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { availableTees, primaryCourse } from "@/lib/golf-course-data";
 import type { PersistedRound, PersistedRoundsStore } from "@/lib/round-domain";
 
 const dataDirectory = path.join(process.cwd(), "data");
@@ -10,10 +11,29 @@ async function ensureDataDirectory() {
   await mkdir(dataDirectory, { recursive: true });
 }
 
+function normalizeRound(round: PersistedRound): PersistedRound {
+  if (round.courseSlug !== primaryCourse.slug) {
+    return round;
+  }
+
+  return {
+    ...round,
+    courseLabel: primaryCourse.displayName,
+    courseShortLabel: primaryCourse.shortLabel,
+    teeLabel:
+      availableTees.find((tee) => tee.code === round.teeCode)?.label ??
+      round.teeLabel,
+  };
+}
+
 async function readStore(): Promise<PersistedRoundsStore> {
   try {
     const rawValue = await readFile(roundsFilePath, "utf8");
-    return JSON.parse(rawValue) as PersistedRoundsStore;
+    const parsed = JSON.parse(rawValue) as PersistedRoundsStore;
+
+    return {
+      rounds: (parsed.rounds ?? []).map(normalizeRound),
+    };
   } catch {
     return { rounds: [] };
   }
@@ -21,7 +41,17 @@ async function readStore(): Promise<PersistedRoundsStore> {
 
 async function writeStore(store: PersistedRoundsStore) {
   await ensureDataDirectory();
-  await writeFile(roundsFilePath, JSON.stringify(store, null, 2), "utf8");
+  await writeFile(
+    roundsFilePath,
+    JSON.stringify(
+      {
+        rounds: store.rounds.map(normalizeRound),
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
 }
 
 export async function saveRound(round: PersistedRound) {

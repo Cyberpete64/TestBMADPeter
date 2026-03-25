@@ -5,11 +5,11 @@ export default function NewRoundPage() {
     <div className="page-stack">
       <section className="page-card">
         <div className="step-header">
-          <span className="pill">Story 1.1</span>
-          <h1 className="page-title">Set up a valid round</h1>
+          <span className="pill">Steg 1</span>
+          <h1 className="page-title">Ställ in en giltig rond</h1>
           <p className="page-intro">
-            Start with the essentials: player name, played date, the preloaded
-            course, tee, and your entered handicap.
+            Börja med grunderna: spelarnamn, speldatum, den förladdade
+            banan, vald tee och ditt registrerade handicap.
           </p>
         </div>
         <RoundSetupForm />

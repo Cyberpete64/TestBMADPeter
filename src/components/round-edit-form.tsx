@@ -33,7 +33,7 @@ function buildDescribedByIds(...ids: Array<string | undefined>) {
 }
 
 function getSelectedTeeLabel(teeCode: RoundEntryDraft["setup"]["teeCode"]) {
-  return availableTees.find((tee) => tee.code === teeCode)?.label ?? "Yellow tee";
+  return availableTees.find((tee) => tee.code === teeCode)?.label ?? "Gul tee";
 }
 
 export function RoundEditForm({ round }: RoundEditFormProps) {
@@ -123,11 +123,11 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
     const nextHoleErrors: HoleErrors = {};
 
     if (draft.setup.playerName.trim() === "") {
-      nextSetupErrors.playerName = "Enter the player name before saving.";
+      nextSetupErrors.playerName = "Ange spelarens namn innan du sparar.";
     }
 
     if (draft.setup.playedOn.trim() === "") {
-      nextSetupErrors.playedOn = "Choose the played date before saving.";
+      nextSetupErrors.playedOn = "Välj speldatum innan du sparar.";
     }
 
     if (
@@ -135,21 +135,21 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
       Number.isNaN(Number(draft.setup.enteredHandicap)) ||
       Number(draft.setup.enteredHandicap) < 0
     ) {
-      nextSetupErrors.enteredHandicap = "Enter a valid handicap before saving.";
+      nextSetupErrors.enteredHandicap = "Ange ett giltigt handicap innan du sparar.";
     }
 
     for (const hole of draft.holes) {
       if (hole.strokes.trim() === "") {
         nextHoleErrors[hole.holeNumber] = {
           ...nextHoleErrors[hole.holeNumber],
-          strokes: "Enter strokes.",
+          strokes: "Ange slag.",
         };
       }
 
       if (hole.putts.trim() === "") {
         nextHoleErrors[hole.holeNumber] = {
           ...nextHoleErrors[hole.holeNumber],
-          putts: "Enter putts.",
+          putts: "Ange puttar.",
         };
       }
     }
@@ -158,12 +158,12 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
     setHoleErrors(nextHoleErrors);
 
     if (Object.keys(nextSetupErrors).length > 0) {
-      setFormError("Fix the setup details before saving this round.");
+      setFormError("Rätta rondens inställningar innan du sparar.");
       return false;
     }
 
     if (Object.keys(nextHoleErrors).length > 0) {
-      setFormError("Complete strokes and putts for all 18 holes before saving.");
+      setFormError("Fyll i slag och puttar för alla 18 hål innan du sparar.");
       return false;
     }
 
@@ -183,7 +183,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
         router.push(`/rounds/${round.id}`);
         router.refresh();
       } catch {
-        setFormError("The round could not be updated right now.");
+        setFormError("Ronden kunde inte uppdateras just nu.");
       }
     });
   }
@@ -213,18 +213,18 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
               <article className="hole-card" key={hole.holeNumber}>
                 <div className="hole-card__top">
                   <div>
-                    <div className="hole-card__eyebrow">Hole {hole.holeNumber}</div>
+                    <div className="hole-card__eyebrow">Hål {hole.holeNumber}</div>
                     <div className="hole-card__title">
-                      Par {hole.par} <span className="muted">/ SI {hole.strokeIndex}</span>
+                      Par {hole.par} <span className="muted">/ HCP {hole.strokeIndex}</span>
                     </div>
-                    <div className="field__hint">{hole.distanceMeters} meters</div>
+                    <div className="field__hint">{hole.distanceMeters} meter</div>
                   </div>
                   <span className="pill">#{hole.holeNumber}</span>
                 </div>
 
                 <div className="hole-card__fields">
                   <div className="field">
-                    <label htmlFor={`strokes-${hole.holeNumber}`}>Strokes</label>
+                    <label htmlFor={`strokes-${hole.holeNumber}`}>Slag</label>
                     <input
                       id={`strokes-${hole.holeNumber}`}
                       aria-describedby={buildDescribedByIds(
@@ -251,7 +251,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
                   </div>
 
                   <div className="field">
-                    <label htmlFor={`putts-${hole.holeNumber}`}>Putts</label>
+                    <label htmlFor={`putts-${hole.holeNumber}`}>Puttar</label>
                     <input
                       id={`putts-${hole.holeNumber}`}
                       aria-describedby={buildDescribedByIds(
@@ -289,17 +289,17 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
     <form className="page-stack" noValidate onSubmit={handleSave}>
       <section className="page-card">
         <div className="step-header">
-          <span className="pill">Edit round</span>
-          <h1 className="page-title">Update saved round</h1>
+          <span className="pill">Redigera rond</span>
+          <h1 className="page-title">Uppdatera sparad rond</h1>
           <p className="page-intro">
-            Adjust the setup or hole-by-hole entry and save to recalculate the
-            round totals and Stableford points.
+            Justera inställningarna eller hålregistreringen och spara för att
+            räkna om rondens totaler och Stablefordpoäng.
           </p>
         </div>
 
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="playerName">Player name</label>
+            <label htmlFor="playerName">Spelare</label>
             <input
               id="playerName"
               aria-describedby={buildDescribedByIds(
@@ -319,7 +319,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
           </div>
 
           <div className="field">
-            <label htmlFor="playedOn">Played date</label>
+            <label htmlFor="playedOn">Speldatum</label>
             <input
               id="playedOn"
               type="date"
@@ -338,7 +338,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
           </div>
 
           <div className="field">
-            <label htmlFor="courseLabel">Course</label>
+            <label htmlFor="courseLabel">Bana</label>
             <input
               id="courseLabel"
               aria-describedby="courseLabel-hint"
@@ -347,7 +347,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
               readOnly
             />
             <div className="field__hint" id="courseLabel-hint">
-              Version 1 is fixed to {primaryCourse.shortLabel} only.
+              Version 1 är låst till {primaryCourse.shortLabel}.
             </div>
           </div>
 
@@ -376,7 +376,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
           </div>
 
           <div className="field">
-            <label htmlFor="enteredHandicap">Entered handicap</label>
+            <label htmlFor="enteredHandicap">Registrerat handicap</label>
             <input
               id="enteredHandicap"
               inputMode="decimal"
@@ -402,8 +402,8 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
         </div>
       </section>
 
-      {renderHoleSection("Front 9", "Review and update holes 1-9.", frontNine)}
-      {renderHoleSection("Back 9", "Review and update holes 10-18.", backNine)}
+      {renderHoleSection("Fram 9", "Granska och uppdatera hål 1-9.", frontNine)}
+      {renderHoleSection("Bak 9", "Granska och uppdatera hål 10-18.", backNine)}
 
       {formError ? (
         <div aria-live="assertive" className="form-error" role="alert">
@@ -413,10 +413,10 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
 
       <div className="sticky-action sticky-action--split">
         <Link className="button-secondary" href={`/rounds/${round.id}`}>
-          Cancel
+          Avbryt
         </Link>
         <button className="button" disabled={isPending} type="submit">
-          {isPending ? "Saving Changes..." : "Save Changes"}
+          {isPending ? "Sparar ändringar..." : "Spara ändringar"}
         </button>
       </div>
     </form>

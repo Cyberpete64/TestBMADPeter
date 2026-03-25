@@ -1,7 +1,7 @@
 {
   "name": "golf-round-tracker",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.0-rc.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,15 +11,15 @@
     "check": "powershell -ExecutionPolicy Bypass -File scripts/release-guardrails.ps1"
   },
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "zod": "latest"
+    "next": "16.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "4.3.6"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "typescript": "latest"
+    "@types/node": "25.5.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3"
   }
 }
