@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DashboardPerformanceInsights } from "@/components/dashboard-performance-insights";
 import { HandicapTrendChart } from "@/components/handicap-trend-chart";
 import { primaryCourse } from "@/lib/golf-course-data";
+import { formatHandicapValue } from "@/lib/handicap";
 import { getRounds } from "@/lib/round-repository";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,9 @@ export default async function HomePage() {
         ).toFixed(1)
       : "-";
   const latestRound = rounds[0] ?? null;
-  const latestHandicap = latestRound?.enteredHandicap ?? "-";
+  const latestHandicap = latestRound
+    ? formatHandicapValue(latestRound.enteredHandicap)
+    : "-";
   const recentRounds = rounds.slice(0, 3);
   const bestRound = rounds.reduce<number | null>((lowestScore, round) => {
     if (lowestScore === null || round.totalScore < lowestScore) {
@@ -33,11 +36,12 @@ export default async function HomePage() {
   return (
     <div className="page-stack">
       <section className="hero">
-        <span className="hero__tag">Mobilvänlig golftracker</span>
-        <h1>Följ dina ronder på {primaryCourse.displayName} med ett lugnt och snabbt flöde.</h1>
+        <span className="hero__tag">Mobilvänlig rondregistrering</span>
+        <h1>Registrera och följ dina ronder på {primaryCourse.displayName} i ett snabbt och lugnt flöde.</h1>
         <p>
-          Spara fulla 18-hålsronder för {primaryCourse.shortLabel}, räkna Stableford
-          automatiskt och håll översikten uppdaterad efter varje rond.
+          Registrera fulla 18-hålsronder på {primaryCourse.shortLabel}, få
+          Stableford beräknat automatiskt och håll översikten uppdaterad efter
+          varje spelad rond.
         </p>
         <div className="hero__actions">
           <Link className="button" href="/rounds/new">
@@ -54,7 +58,7 @@ export default async function HomePage() {
             </>
           ) : (
             <span className="button-secondary" aria-disabled="true">
-              Spara en rond för att låsa upp historiken
+              Spara din första rond för att bygga upp historiken
             </span>
           )}
         </div>
@@ -101,8 +105,8 @@ export default async function HomePage() {
               <div>
                 <h2>Senaste ronder</h2>
                 <p className="page-intro">
-                  Hoppa tillbaka till dina senaste scorekort eller fortsätt bygga
-                  trenden med nästa rond.
+                  Gå tillbaka till dina senaste scorekort eller fortsätt bygga
+                  din trend med nästa rond.
                 </p>
               </div>
               <Link className="button-secondary" href="/rounds">
@@ -134,7 +138,7 @@ export default async function HomePage() {
                     </div>
                     <div>
                       <div className="stat-label">Handicap</div>
-                      <strong>{round.enteredHandicap}</strong>
+                      <strong>{formatHandicapValue(round.enteredHandicap)}</strong>
                     </div>
                   </div>
                   <div className="actions-row">

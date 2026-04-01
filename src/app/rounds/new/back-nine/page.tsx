@@ -19,7 +19,7 @@ export default function BackNinePage() {
           nextHref="/rounds/new/review"
           primaryActionLabel="Fortsätt till sparöversikt"
           progressLabel="Steg 3 av 4"
-          progressWidth="72%"
+          progressWidth="75%"
           title="Bak 9"
         />
       </section>

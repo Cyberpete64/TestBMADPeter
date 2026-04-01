@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { formatHandicapDelta, formatHandicapValue } from "@/lib/handicap";
 import type { PersistedRound } from "@/lib/round-domain";
 
 type HandicapTrendChartProps = {
@@ -17,10 +18,6 @@ const CHART_HEIGHT = 220;
 const CHART_PADDING_X = 28;
 const CHART_PADDING_TOP = 24;
 const CHART_PADDING_BOTTOM = 38;
-
-function formatHandicap(value: number) {
-  return value.toFixed(1);
-}
 
 function sortRoundsForTrend(rounds: PersistedRound[]): TrendPoint[] {
   return [...rounds]
@@ -47,8 +44,8 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
             <span className="pill">Handicaptrend</span>
             <h2>Utvecklingen syns efter din första sparade rond.</h2>
             <p className="muted">
-              Spara ronder så ritar översikten upp handicapvärdet du
-              registrerat över tid.
+              Spara ronder så visar översikten hur ditt registrerade
+              handicap förändras över tid.
             </p>
           </div>
           <Link className="button-secondary" href="/rounds/new">
@@ -93,8 +90,7 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
   const latestPoint = trend[trend.length - 1];
   const firstPoint = trend[0];
   const handicapChange = latestPoint.handicap - firstPoint.handicap;
-  const roundedChange =
-    handicapChange === 0 ? "0.0" : `${handicapChange > 0 ? "+" : ""}${handicapChange.toFixed(1)}`;
+  const roundedChange = formatHandicapDelta(handicapChange);
   const titleId = "handicap-trend-chart-title";
   const descriptionId = "handicap-trend-chart-description";
 
@@ -103,20 +99,20 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
       <div className="detail-card__header">
         <div>
           <span className="pill">Handicaptrend</span>
-          <h2>Registrerat handicap över tid</h2>
+          <h2>Handicap över tid</h2>
           <p className="muted">
-            Visar handicapvärdet som sparats på varje rond. Lägre värden
-            betyder att utvecklingen går åt rätt håll.
+            Visar handicapvärdet du sparat på varje rond. Lägre värden
+            betyder normalt att utvecklingen går åt rätt håll.
           </p>
         </div>
         <div className="trend-summary">
           <div>
             <div className="stat-label">Första</div>
-            <strong>{formatHandicap(firstPoint.handicap)}</strong>
+            <strong>{formatHandicapValue(firstPoint.handicap)}</strong>
           </div>
           <div>
             <div className="stat-label">Senaste</div>
-            <strong>{formatHandicap(latestPoint.handicap)}</strong>
+            <strong>{formatHandicapValue(latestPoint.handicap)}</strong>
           </div>
           <div>
             <div className="stat-label">Förändring</div>
@@ -133,9 +129,9 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           role="img"
         >
-          <title id={titleId}>Registrerat handicap över tid</title>
+          <title id={titleId}>Handicap över tid</title>
           <desc id={descriptionId}>
-            {`Handicapvärden från ${firstPoint.playedOn} till ${latestPoint.playedOn}. Första ${formatHandicap(firstPoint.handicap)}, senaste ${formatHandicap(latestPoint.handicap)}, förändring ${roundedChange}.`}
+            {`Handicapvärden från ${firstPoint.playedOn} till ${latestPoint.playedOn}. Första ${formatHandicapValue(firstPoint.handicap)}, senaste ${formatHandicapValue(latestPoint.handicap)}, förändring ${roundedChange}.`}
           </desc>
           <line
             className="trend-chart__axis"
@@ -176,7 +172,7 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
                 x={point.x}
                 y={point.y - 12}
               >
-                {formatHandicap(point.handicap)}
+                {formatHandicapValue(point.handicap)}
               </text>
               <text
                 className="trend-chart__label"
@@ -193,7 +189,7 @@ export function HandicapTrendChart({ rounds }: HandicapTrendChartProps) {
       <ol className="sr-only">
         {trend.map((point) => (
           <li key={`trend-summary-${point.id}`}>
-            {point.playedOn}: handicap {formatHandicap(point.handicap)}
+            {point.playedOn}: handicap {formatHandicapValue(point.handicap)}
           </li>
         ))}
       </ol>

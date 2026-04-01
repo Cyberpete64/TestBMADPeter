@@ -6,6 +6,10 @@ import { z } from "zod";
 
 import { availableTees, primaryCourse } from "@/lib/golf-course-data";
 import {
+  isValidHandicapInput,
+  normalizeHandicapInput,
+} from "@/lib/handicap";
+import {
   persistRoundSetupToStorage,
   type RoundSetup,
 } from "@/lib/round-setup";
@@ -19,11 +23,8 @@ const roundSetupSchema = z.object({
     .string()
     .trim()
     .min(1, "Ange ditt handicap.")
-    .refine((value) => !Number.isNaN(Number(value)), {
+    .refine(isValidHandicapInput, {
       message: "Handicap måste vara ett tal.",
-    })
-    .refine((value) => Number(value) >= 0, {
-      message: "Handicap kan inte vara negativt.",
     }),
 });
 
@@ -58,7 +59,12 @@ export function RoundSetupForm() {
     key: K,
     value: RoundSetupFormValues[K],
   ) {
-    setValues((current) => ({ ...current, [key]: value }));
+    const nextValue =
+      key === "enteredHandicap" && typeof value === "string"
+        ? normalizeHandicapInput(value)
+        : value;
+
+    setValues((current) => ({ ...current, [key]: nextValue }));
     setFieldErrors((current) => ({ ...current, [key]: undefined }));
     setFormError(null);
   }
@@ -101,7 +107,7 @@ export function RoundSetupForm() {
       courseShortLabel: primaryCourse.shortLabel,
       teeCode: parsed.data.teeCode,
       teeLabel: selectedTee.label,
-      enteredHandicap: parsed.data.enteredHandicap,
+      enteredHandicap: normalizeHandicapInput(parsed.data.enteredHandicap),
     };
 
     persistRoundSetupToStorage(setup);
@@ -113,7 +119,7 @@ export function RoundSetupForm() {
       <div className="step-progress" aria-label="Rondens inställningssteg">
         <span className="pill">Steg 1 av 4</span>
         <div className="step-progress__track" aria-hidden="true">
-          <div className="step-progress__fill" style={{ width: "20%" }} />
+          <div className="step-progress__fill" style={{ width: "25%" }} />
         </div>
       </div>
 
@@ -226,7 +232,7 @@ export function RoundSetupForm() {
           </div>
         ) : (
           <div className="field__hint" id="enteredHandicap-hint">
-            Värdet sparas med ronden och används i MVP-beräkningen.
+            Värdet sparas med ronden och du kan skriva med komma, till exempel 18,4.
           </div>
         )}
       </div>

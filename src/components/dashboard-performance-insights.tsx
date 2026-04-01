@@ -44,8 +44,8 @@ export function DashboardPerformanceInsights({
           <span className="pill">Prestandainsikter</span>
           <h2>Puttning och hålmönster</h2>
           <p className="muted">
-            De här snitten kommer från alla sparade ronder och visar var din
-            scoring är som starkast och var banan straffar mest.
+            De här snitten kommer från alla sparade ronder och visar var ditt
+            spel är som starkast och var banan kostar flest slag.
           </p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function DashboardPerformanceInsights({
           </div>
         </article>
         <article className="stat-card">
-          <div className="stat-label">Bästa scoringhål</div>
+          <div className="stat-label">Starkaste hålet</div>
           <div className="stat-value">
             {insights.bestHole ? `#${insights.bestHole.holeNumber}` : "-"}
           </div>
@@ -76,7 +76,7 @@ export function DashboardPerformanceInsights({
           </p>
         </article>
         <article className="stat-card">
-          <div className="stat-label">Tuffaste hålet</div>
+          <div className="stat-label">Svåraste hålet</div>
           <div className="stat-value">
             {insights.toughestHole ? `#${insights.toughestHole.holeNumber}` : "-"}
           </div>

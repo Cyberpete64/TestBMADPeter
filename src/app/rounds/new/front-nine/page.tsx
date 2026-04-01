@@ -19,7 +19,7 @@ export default function FrontNinePage() {
           nextHref="/rounds/new/back-nine"
           primaryActionLabel="Fortsätt till Bak 9"
           progressLabel="Steg 2 av 4"
-          progressWidth="48%"
+          progressWidth="50%"
           title="Fram 9"
         />
       </section>

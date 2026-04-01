@@ -4,7 +4,11 @@ inputDocuments:
   - _bmad-output/planning-artifacts/prd.md
   - _bmad-output/planning-artifacts/frontend-spec-TestBMADPeter-2026-03-19.md
   - _bmad-output/planning-artifacts/architecture-draft-TestBMADPeter-2026-03-19.md
-date: 2026-03-23
+  - README.md
+  - src/app/page.tsx
+  - src/app/rounds/new/review/actions.ts
+  - src/app/rounds/[id]/actions.ts
+date: 2026-04-01
 author: Hellgrenp
 ---
 
@@ -12,45 +16,46 @@ author: Hellgrenp
 
 ## Overview
 
-This document provides the complete epic and story breakdown for Golf Round Tracker, decomposing the PRD, frontend specification, and architecture draft into implementable stories.
+This document reflects the implemented MVP as of 2026-04-01. It syncs the original epic plan to the current Next.js application, including the four-step new-round flow, session-backed draft handling, local JSON persistence, dashboard insights, round edit/delete support, and the release checks that currently exist in the repository.
 
 ## Requirements Inventory
 
 ### Functional Requirements
 
-- FR-1 to FR-5: preloaded course and tee-specific reference data
-- FR-6 to FR-12: round setup and front-nine/back-nine entry flow
-- FR-13 to FR-18: scoring and derived round calculations
-- FR-19 to FR-27: round history, round detail, edit, and delete
-- FR-28 to FR-32: dashboard and progress insights
-- FR-33 to FR-35: mobile-friendly navigation and empty-state guidance
+- FR-1 to FR-5: preloaded course and tee-specific reference data for Ostersund-Froso Golfklubb
+- FR-6 to FR-12: round setup plus front-nine, back-nine, and review-before-save flow
+- FR-13 to FR-18: Stableford scoring, received strokes, and derived round totals
+- FR-19 to FR-27: round history list, round detail, edit, and delete
+- FR-28 to FR-32: overview dashboard, handicap trend, recent rounds, and hole-level insights
+- FR-33 to FR-35: mobile-friendly navigation, sticky actions, and empty-state guidance
 
 ### NonFunctional Requirements
 
-- NFR-1 to NFR-2: page and mutation responsiveness
-- NFR-3 to NFR-5: transactional integrity and stable historical calculations
-- NFR-6 to NFR-8: server-side validation, destructive action confirmation, protected hosting posture
-- NFR-9 to NFR-11: accessibility and contrast expectations
-- NFR-12 to NFR-13: mobile usability and discoverable primary actions
-- NFR-14 to NFR-15: extensible data model and future-ready app structure
+- NFR-1 to NFR-2: responsive page loads and save/update interactions using dynamic Next.js routes and server actions
+- NFR-3 to NFR-5: complete rounds are persisted as full documents in `data/rounds.json`, with scoring recalculated from stored round data
+- NFR-6 to NFR-8: explicit confirmation for destructive actions, no public-auth model in MVP, and release readiness based on private/local usage
+- NFR-9 to NFR-11: labels, inline hints, live-region errors, and accessible chart descriptions
+- NFR-12 to NFR-13: mobile-first card layout, sticky primary actions, and clear empty states
+- NFR-14 to NFR-15: shared domain helpers keep tee logic, scoring logic, and dashboard calculations reusable for future expansion
 
 ### Additional Requirements
 
-- User-facing course name should use `Östersund-Frösö Golfklubb` or the short label `Öfg`
-- Standard Stableford is the scoring model for MVP
-- Entered handicap is the only handicap input used in MVP scoring
-- Hole-level course snapshots must preserve historical scoring accuracy
-- No authentication is part of the MVP product model
+- User-facing course naming is normalized to the club display name and short label in the app
+- Standard Stableford is the only scoring model in MVP
+- Entered handicap is stored with each round and reused for scoring/trend display
+- The create-round wizard stores setup and hole entries in `sessionStorage` until save completes
+- Saved rounds live in `data/rounds.json`; there is no database, cloud sync, or authentication in MVP
+- Only full 18-hole rounds are supported in the current product
 
 ### UX Design Requirements
 
-- Mobile-first card-based layout
-- One obvious primary action per screen
-- Front-nine and back-nine wizard flow
-- Hole-card input pattern rather than large data tables
-- Empty states that push the user toward `New Round`
-- Round detail with per-hole results
-- Accessible labels, focus states, and touch-friendly targets
+- Mobile-first shell with top navigation for Overview, New Round, and Rounds
+- Card-based setup, history, detail, and insight views instead of dense tables
+- Four-step create-round flow with visible progress and sticky actions
+- Dedicated review step before save with totals preview and per-hole preview
+- Clear empty states that push the user toward `New Round`
+- Inline field errors, form-level alerts, and destructive-action confirmation
+- Accessible SVG handicap chart with title, description, and screen-reader summary
 
 ### FR Coverage Map
 
@@ -59,338 +64,378 @@ This document provides the complete epic and story breakdown for Golf Round Trac
 - FR-28 to FR-32 -> Epic 3
 - FR-33 to FR-35 -> Epic 4
 - NFR-1 to NFR-5 -> Epics 1, 2, and 3
-- NFR-6 to NFR-13 -> Epic 4 with implementation criteria applied across all epics
-- NFR-14 to NFR-15 -> Epics 1 and 4
+- NFR-6 to NFR-13 -> Epic 4 with cross-cutting implementation criteria
+- NFR-14 to NFR-15 -> Epics 1, 3, and 4
 
 ## Epic List
 
 1. **Epic 1: Record and Score a Golf Round**
-   User outcome: a golfer can create a complete 18-hole round for `Östersund-Frösö Golfklubb` and receive trusted scoring results.
+   User outcome: a golfer can complete a full 18-hole round in a guided four-step flow and receive automatic Stableford scoring.
    FR coverage: FR-1 to FR-18
 
 2. **Epic 2: Review and Maintain Round History**
-   User outcome: a golfer can browse, inspect, correct, and remove saved rounds without breaking data trust.
+   User outcome: a golfer can browse saved rounds, inspect scorecards, correct mistakes, and remove unwanted rounds.
    FR coverage: FR-19 to FR-27
 
 3. **Epic 3: Track Progress on the Dashboard**
-   User outcome: a golfer can quickly understand current performance and progress before entering another round.
+   User outcome: a golfer can open the overview and immediately understand recent activity, trend movement, and hole-level performance patterns.
    FR coverage: FR-28 to FR-32
 
 4. **Epic 4: Deliver a Trustworthy Mobile MVP**
-   User outcome: the application feels usable, accessible, and safe enough to rely on as a daily personal tool.
+   User outcome: the app feels coherent, understandable, and dependable as a private single-user MVP.
    FR coverage: FR-33 to FR-35 plus cross-cutting NFRs
 
 ## Epic 1: Record and Score a Golf Round
 
-Enable the core MVP value: start a round, enter hole-by-hole data, save it, and receive trusted round results.
+Enable the core MVP value: start a round, enter all 18 holes, review the draft, save it, and receive calculated scoring results.
 
-### Story 1.1: Start a Valid Round
+### Story 1.1: Capture Round Setup and Start the Wizard
 
 As a golfer,
-I want to set up a round with the correct course, tee, date, player name, and handicap,
-So that I can begin a valid score entry flow.
+I want to set up a round with the supported course, tee, date, player name, and handicap,
+So that I can begin the score-entry flow with valid metadata.
 
 **Acceptance Criteria:**
 
-**Given** the user opens the new round flow
+**Given** the user opens `/rounds/new`
 **When** the setup form loads
-**Then** the course selector shows `Östersund-Frösö Golfklubb` as the only selectable course
-**And** the tee selector shows only `red` and `yellow`
+**Then** the course selector is locked to the single supported course
+**And** the tee selector offers only `yellow` and `red`
+**And** the played-on date defaults to today
 
-**Given** the user is on the setup form
-**When** required fields are incomplete or invalid
-**Then** the primary continue action is blocked
-**And** validation feedback identifies the missing or invalid fields
+**Given** the user enters incomplete or invalid setup data
+**When** the user tries to continue
+**Then** the form shows inline field errors plus a form-level alert
+**And** the primary action stays disabled until the setup is valid
 
 **Given** the user enters valid setup data
-**When** the user selects `Continue to Front 9`
-**Then** the application stores the setup state for the current round flow
-**And** the user is taken to hole entry for holes 1 to 9
+**When** the user continues to the next step
+**Then** the setup is stored in `sessionStorage`
+**And** the user is routed to `/rounds/new/front-nine`
 
-### Story 1.2: Enter Front Nine and Back Nine Data
+### Story 1.2: Enter Front Nine and Back Nine as Hole Cards
 
 As a golfer,
 I want to enter strokes and putts hole by hole across front nine and back nine,
-So that I can record a complete 18-hole round without friction.
+So that I can record a full round in a mobile-friendly flow.
 
 **Acceptance Criteria:**
 
-**Given** the user is on the front-nine step
-**When** the step renders
-**Then** each hole is presented as a mobile-friendly hole card
-**And** each card shows hole number, par, stroke index, strokes input, and putts input
+**Given** the user is on the front-nine or back-nine step
+**When** the page renders
+**Then** each hole is shown as a card with hole number, par, stroke index, distance, strokes input, and putts input
+**And** the page shows setup context such as player, course, date, and tee
 
-**Given** the user has entered front-nine values
-**When** the user selects `Continue to Back 9`
-**Then** the application preserves the front-nine data
-**And** the back-nine step opens with the same card pattern for holes 10 to 18
+**Given** the user types values for strokes or putts
+**When** the draft updates
+**Then** only numeric characters are retained
+**And** the current draft is persisted in `sessionStorage`
 
-**Given** the user navigates between steps in the round flow
-**When** the user returns to a previous step
-**Then** previously entered values remain available for review and editing
+**Given** the user leaves and returns to a previous wizard step
+**When** the step reloads
+**Then** previously entered values remain available
+**And** the back/next actions preserve the same round draft
 
-### Story 1.3: Save a Round with Trusted Scoring
+**Given** the setup step has not been completed
+**When** the user opens a hole-entry route directly
+**Then** the page shows an empty-state recovery message
+**And** the user is sent back to the setup step instead of seeing a broken form
+
+### Story 1.3: Review and Save a Fully Scored Round
 
 As a golfer,
-I want the application to calculate my round automatically when I save it,
-So that I can trust the result without doing manual scoring work.
+I want to review my draft before saving and then let the server calculate the result,
+So that I can trust the saved scorecard.
 
 **Acceptance Criteria:**
 
-**Given** the user submits a complete valid round
+**Given** the user reaches `/rounds/new/review`
+**When** the review page renders
+**Then** the page shows setup details, total entered strokes, total entered putts, and a per-hole preview for all 18 holes
+
+**Given** the round draft is incomplete
+**When** the user tries to save
+**Then** the save action is rejected
+**And** the user sees an error explaining that all 18 holes must be completed first
+
+**Given** the round draft is complete
 **When** the save action runs
-**Then** the server validates the setup and hole data before persistence
-**And** invalid payloads are rejected without losing user-entered form data
+**Then** the server creates a new round id and scores the round from the draft
+**And** each saved hole includes received strokes and Stableford points
+**And** round totals for score, putts, and Stableford are derived automatically
 
-**Given** a valid round submission
-**When** scoring is executed
-**Then** the application calculates total score, total putts, received strokes per hole, Stableford points per hole, and total Stableford points
-**And** derived Stableford values are stored as system-calculated values rather than user-editable values
+**Given** the round is saved successfully
+**When** persistence completes
+**Then** the full round document is written to `data/rounds.json`
+**And** the wizard draft is cleared from `sessionStorage`
+**And** the user is redirected to the saved round detail page
 
-**Given** the round is ready to persist
-**When** the save transaction completes
-**Then** the round and hole rows are stored atomically
-**And** the saved round includes tee-specific course snapshots needed to preserve historical scoring stability
-
-### Story 1.4: See the Round Summary Immediately After Save
+### Story 1.4: Review the Saved Scorecard Immediately
 
 As a golfer,
-I want to see a round summary as soon as the round is saved,
-So that I can review the outcome while it is still fresh.
+I want to see a full scorecard immediately after save,
+So that I can confirm the recorded round while it is still fresh.
 
 **Acceptance Criteria:**
 
-**Given** a round is saved successfully
-**When** the user is redirected to the round detail page
-**Then** the page shows player name, date, course, tee, and entered handicap
-**And** the page shows total score, total putts, and total Stableford points
+**Given** a round has just been saved
+**When** the detail page opens
+**Then** the page shows total score, total putts, Stableford points, and entered handicap
+**And** the page header shows player, course short label, played-on date, and tee
 
-**Given** the round detail page is loaded
-**When** the per-hole section renders
-**Then** each hole displays par, stroke index, received strokes, strokes, putts, and Stableford points
-**And** the summary is readable on an iPhone-sized screen
+**Given** the detail page renders the hole summary
+**When** the scorecard is displayed
+**Then** each hole shows par, stroke index, strokes, putts, received strokes, and Stableford points
+**And** the layout stays readable on a phone-sized screen
 
 ## Epic 2: Review and Maintain Round History
 
-Enable the user to browse previous rounds, inspect them in detail, and keep historical data accurate over time.
+Enable the user to browse previous rounds, inspect them in detail, edit mistakes, and remove rounds that should no longer contribute to the dashboard.
 
-### Story 2.1: Browse Saved Rounds
+### Story 2.1: Browse Saved Rounds from Newest to Oldest
 
 As a golfer,
 I want to browse my saved rounds in one place,
-So that I can quickly find and compare previous rounds.
+So that I can quickly find a previous scorecard.
+
+**Acceptance Criteria:**
+
+**Given** one or more rounds exist
+**When** the user opens `/rounds`
+**Then** the rounds are listed newest first
+**And** each round card shows player, course short label, date, tee, score, Stableford, putts, and handicap
+
+**Given** the user is on the history page
+**When** actions are shown for a round
+**Then** the card offers direct links to open the scorecard or edit the round
+
+**Given** no rounds exist
+**When** the history page loads
+**Then** the page shows an empty state
+**And** the empty state directs the user to start a new round or return to the overview
+
+### Story 2.2: Open a Saved Round and Navigate from It
+
+As a golfer,
+I want to open a saved round from history or from the dashboard,
+So that I can inspect the full scorecard later.
+
+**Acceptance Criteria:**
+
+**Given** the user selects a saved round
+**When** the detail route opens
+**Then** the application loads the round by id from the persisted store
+**And** the displayed scorecard matches the saved round totals and hole values
+
+**Given** the round detail page is visible
+**When** the action row renders
+**Then** the user can return to the overview, open edit mode, or start the delete flow
+
+**Given** a round id does not exist
+**When** the detail route is opened
+**Then** the application returns the not-found experience instead of rendering an invalid scorecard
+
+### Story 2.3: Edit a Saved Round in a Single Form
+
+As a golfer,
+I want to edit a saved round,
+So that I can correct mistakes without creating a new round from scratch.
+
+**Acceptance Criteria:**
+
+**Given** the user opens `/rounds/[id]/edit`
+**When** the edit form loads
+**Then** player, date, tee, handicap, and all 18 hole values are prefilled from the saved round
+**And** the course remains locked to the single MVP course
+
+**Given** the user changes setup or hole values
+**When** the user saves valid changes
+**Then** the server rescoring flow recalculates received strokes, Stableford, and totals before persistence
+**And** the user is redirected back to the updated round detail page
+
+**Given** the user enters invalid setup or hole data during edit
+**When** the user attempts to save
+**Then** inline errors are shown for the affected fields
+**And** the editable form state is preserved so the user can correct the round
+
+### Story 2.4: Delete a Saved Round with Explicit Confirmation
+
+As a golfer,
+I want to delete a saved round only after a clear confirmation step,
+So that I do not accidentally remove data I still need.
+
+**Acceptance Criteria:**
+
+**Given** the user is on a round detail page
+**When** the user selects `Ta bort rond`
+**Then** the UI opens an explicit confirmation panel
+**And** the round is not deleted until the user confirms
+
+**Given** the user confirms deletion
+**When** the delete action completes successfully
+**Then** the round is removed from `data/rounds.json`
+**And** the user is redirected to the overview
+**And** the round no longer contributes to history or dashboard calculations
+
+**Given** deletion fails
+**When** the server action throws
+**Then** the user sees an error message instead of a silent failure
+
+## Epic 3: Track Progress on the Dashboard
+
+Turn saved round data into a useful overview that helps the golfer understand recent activity, trend movement, and hole-level performance before starting the next round.
+
+### Story 3.1: Keep the Overview Useful in Empty and Populated States
+
+As a golfer,
+I want the overview to stay useful whether or not I already have rounds saved,
+So that I always know the next best action.
+
+**Acceptance Criteria:**
+
+**Given** no rounds exist
+**When** the user opens `/`
+**Then** the overview shows a primary `Starta ny rond` action
+**And** the dashboard sections show empty states for trend, insights, and recent-history guidance
+
+**Given** one or more rounds exist
+**When** the overview renders
+**Then** the hero section offers actions to start a new round, open the latest round, and view all rounds
+**And** the lower overview section shows recent saved rounds alongside the primary call to action
+
+### Story 3.2: Surface Core Round Statistics at a Glance
+
+As a golfer,
+I want to see my key round statistics immediately,
+So that I can understand where my current form stands.
+
+**Acceptance Criteria:**
+
+**Given** saved rounds exist
+**When** the stats grid renders
+**Then** it shows total rounds played, average Stableford points, latest handicap, and best round
+
+**Given** best round is calculated
+**When** the dashboard picks the result
+**Then** the best round is defined as the lowest total score in the saved round set
+**And** the displayed value stays consistent with persisted totals
+
+**Given** recent rounds are shown on the overview
+**When** the recent-round cards render
+**Then** each card shows score, Stableford, putts, and handicap
+**And** each card links to both the scorecard and edit flow
+
+### Story 3.3: Visualize Handicap Trend Over Time
+
+As a golfer,
+I want to see how my recorded handicap changes over time,
+So that I can spot whether my trend is moving in the right direction.
 
 **Acceptance Criteria:**
 
 **Given** at least one round exists
-**When** the user opens the rounds page
-**Then** the page lists saved rounds in a scannable history view
-**And** each round item shows date, course, tee, total score, Stableford total, and entered handicap
+**When** the handicap trend section renders
+**Then** the overview shows an SVG trend chart ordered chronologically by played date and creation time
+**And** each point displays the saved handicap value for that round
 
-**Given** no rounds exist
-**When** the user opens the rounds page
-**Then** the page shows a clear empty state
-**And** the empty state directs the user toward creating a new round
+**Given** the trend summary is visible
+**When** the chart header renders
+**Then** it shows the first handicap, latest handicap, and the overall change across the saved range
 
-### Story 2.2: Open a Saved Round from History
+**Given** the chart is used with assistive technology
+**When** accessibility metadata is read
+**Then** the SVG exposes a title and description
+**And** the page includes a screen-reader-only list of the plotted handicap points
 
-As a golfer,
-I want to open a saved round from my history,
-So that I can inspect hole-by-hole results later.
-
-**Acceptance Criteria:**
-
-**Given** the user is on the rounds page
-**When** the user selects a round item
-**Then** the application opens the correct round detail page
-**And** the page reflects the same summary structure shown after initial save
-
-**Given** the round detail page is opened from history
-**When** the page loads
-**Then** all persisted round values are read from storage
-**And** the displayed totals match the saved round data
-
-### Story 2.3: Edit a Saved Round
+### Story 3.4: Show Hole-Level Performance Insights
 
 As a golfer,
-I want to edit a saved round,
-So that I can correct mistakes without rebuilding the round from scratch.
-
-**Acceptance Criteria:**
-
-**Given** the user opens edit mode for a saved round
-**When** the edit flow loads
-**Then** the setup values and hole values are prefilled from the selected round
-**And** the structure matches the create-round flow
-
-**Given** the user changes valid values and saves
-**When** the update action completes
-**Then** the application recalculates all derived totals before persistence
-**And** the user is returned to the updated round detail page
-
-**Given** the user enters invalid data during edit
-**When** the user attempts to save
-**Then** the server rejects the invalid update
-**And** the user keeps the editable form state needed to correct the issue
-
-### Story 2.4: Delete a Saved Round Safely
-
-As a golfer,
-I want to delete a saved round with confirmation,
-So that I can remove bad or unwanted data without accidental loss.
-
-**Acceptance Criteria:**
-
-**Given** the user is on a saved round detail page
-**When** the user selects delete
-**Then** the application shows an explicit confirmation dialog
-**And** the round is not deleted until the user confirms
-
-**Given** the user confirms deletion
-**When** the delete action completes
-**Then** the round and related hole data are removed transactionally
-**And** the user is redirected to a valid post-delete screen
-
-## Epic 3: Track Progress on the Dashboard
-
-Turn saved round data into immediate personal insight so the user gains value even before starting the next round.
-
-### Story 3.1: See a Useful Dashboard in Empty and Populated States
-
-As a golfer,
-I want the dashboard to feel useful whether or not I already have rounds saved,
-So that the app always gives me a clear next step.
+I want the overview to highlight deeper performance patterns,
+So that I can see where I gain or lose shots over time.
 
 **Acceptance Criteria:**
 
 **Given** no rounds exist
-**When** the user lands on the dashboard
-**Then** the dashboard shows a meaningful empty state
-**And** the primary action encourages the user to create a first round
+**When** the insights section renders
+**Then** it shows an empty state instead of empty metrics
 
-**Given** saved rounds exist
-**When** the user lands on the dashboard
-**Then** the dashboard shows the key stats area and recent context
-**And** `New Round` remains the primary call to action
+**Given** one or more rounds exist
+**When** the insights section renders
+**Then** it shows average putts per round, average putts per hole, strongest hole, and toughest hole
 
-### Story 3.2: View Core Performance Stats
-
-As a golfer,
-I want to see my most important golf statistics at a glance,
-So that I can quickly understand my current performance.
-
-**Acceptance Criteria:**
-
-**Given** saved rounds exist
-**When** the dashboard renders
-**Then** the dashboard shows total rounds played
-**And** the dashboard shows average Stableford points
-
-**Given** saved rounds exist
-**When** the dashboard computes best round
-**Then** best round is defined by lowest total score
-**And** the displayed result is consistent with stored round totals
-
-### Story 3.3: View Handicap Trend Over Time
-
-As a golfer,
-I want to see how my entered handicap changes over time,
-So that I can spot progress or regression across rounds.
-
-**Acceptance Criteria:**
-
-**Given** at least two rounds with stored handicap values exist
-**When** the dashboard renders the trend section
-**Then** the application shows a chronological handicap trend visualization
-**And** the chart uses the entered handicap values from persisted rounds
-
-**Given** the round set changes through create, edit, or delete
-**When** the dashboard is next loaded
-**Then** the handicap trend reflects the current persisted round set
-**And** stale trend data is not shown
-
-### Story 3.4: Review Deeper Performance Insights
-
-As a golfer,
-I want the dashboard to surface deeper round and hole-level patterns,
-So that I can understand where I score well and where I lose strokes.
-
-**Acceptance Criteria:**
-
-**Given** saved rounds exist
-**When** the dashboard renders the insights section
-**Then** the dashboard shows average putts per round
-**And** the dashboard shows average putts per hole
-
-**Given** saved rounds exist
-**When** the dashboard computes hole-level performance patterns
-**Then** the dashboard identifies a best scoring hole and a toughest hole using persisted round data
-**And** the logic is derived from stored Stableford and score-to-par results rather than manual labels
-
-**Given** saved rounds exist
-**When** the hole insight grid renders
-**Then** each hole displays average Stableford, average putts, and average score relative to par
-**And** the data reflects the current persisted round set after create, edit, or delete actions
+**Given** hole-level insight cards are displayed
+**When** the per-hole metrics are calculated
+**Then** each card shows sample count, average Stableford, average putts, and average score relative to par
+**And** the metrics are derived from persisted hole data across all saved rounds
 
 ## Epic 4: Deliver a Trustworthy Mobile MVP
 
-Ensure the product feels reliable, accessible, and safe enough to use as a real personal tool.
+Ensure the MVP is coherent, understandable, and safe to use within its intended private single-user scope.
 
-### Story 4.1: Use the App Comfortably on Mobile
+### Story 4.1: Present a Coherent Mobile-First Experience
 
 As a golfer,
-I want the app to feel natural on my phone,
-So that I can use it immediately after a round without friction.
+I want the app to feel natural on a phone,
+So that I can use it comfortably after a round.
 
 **Acceptance Criteria:**
 
-**Given** the user visits the app on an iPhone-sized screen
-**When** the main flows render
-**Then** the layout is mobile-friendly without requiring large desktop tables
-**And** each workflow screen has one clear primary action
+**Given** the user moves through the app on a phone-sized screen
+**When** the main routes render
+**Then** the UI uses stacked cards, compact summaries, and action rows instead of desktop-style data tables
 
-**Given** the user is in a long form step
-**When** the user scrolls through the page
-**Then** the primary action remains easy to discover
-**And** the UI does not rely on hover-only interactions
+**Given** the user is in the create-round wizard
+**When** the page shows progress
+**Then** the flow exposes visible step progress from setup through review
+**And** the primary action remains easy to reach through sticky action controls
 
-### Story 4.2: Receive Clear Validation and Accessible Feedback
+**Given** the user navigates between key product areas
+**When** the shell is visible
+**Then** the header offers direct navigation to Overview, New Round, and Rounds
+**And** the current app structure remains simple enough for a single-user MVP
+
+### Story 4.2: Provide Clear Validation and Accessible Feedback
 
 As a golfer,
-I want the app to explain problems clearly and remain accessible,
-So that I can complete the flow confidently regardless of device or input method.
+I want the app to explain problems clearly and expose usable semantics,
+So that I can complete tasks confidently across devices and assistive tools.
 
 **Acceptance Criteria:**
 
-**Given** the user interacts with forms
+**Given** the user interacts with setup, entry, or edit forms
 **When** validation errors occur
-**Then** fields have programmatically associated labels and actionable feedback
-**And** focus states remain visible for keyboard and assistive users
+**Then** fields expose labels plus `aria-invalid` and `aria-describedby` relationships
+**And** the user receives inline error text and form-level alerts where needed
 
-**Given** the user navigates the application
-**When** dialogs, buttons, charts, and inputs are shown
-**Then** interactive controls meet touch-target and contrast expectations
-**And** destructive actions are visually distinct from primary save actions
+**Given** the user performs a destructive action
+**When** delete confirmation appears
+**Then** the destructive action is visually separated from secondary actions
+**And** the user must explicitly confirm before data is removed
 
-### Story 4.3: Release the MVP with Operational Guardrails
+**Given** the overview renders the handicap trend chart
+**When** the chart is announced to assistive technology
+**Then** it includes an accessible title and description
+**And** the trend data is also available in non-visual text form
+
+### Story 4.3: Support the Local MVP with Honest Operational Guardrails
 
 As a product owner,
-I want the MVP to launch with the right trust and safety guardrails,
-So that the app is dependable even before larger platform features exist.
+I want the repository and runtime model to be explicit about the MVP's current limits,
+So that release expectations match the implemented product.
 
 **Acceptance Criteria:**
 
-**Given** create, edit, and delete flows exist
-**When** the server handles write operations
-**Then** all writes are validated server-side
-**And** partial round updates cannot persist
+**Given** the current MVP persistence model
+**When** rounds are saved, updated, or deleted
+**Then** the app reads and writes `data/rounds.json`
+**And** the product remains a single-user, no-auth, no-cloud-sync application
 
-**Given** the MVP has no product-level authentication
-**When** the app is prepared for hosting outside a private environment
-**Then** an operational access-control measure is defined before public exposure
-**And** this requirement is tracked as part of release readiness
+**Given** release checks are run
+**When** `npm run check` executes
+**Then** it runs unit tests, TypeScript validation, and a production build verification
+**And** the script restores `tsconfig.json` after the build check completes
 
-**Given** the MVP is prepared for release
-**When** quality verification is performed
-**Then** critical flows have automated coverage for scoring, save, edit, delete, and dashboard refresh behavior
-**And** performance expectations for dashboard load and round save are validated against MVP targets
+**Given** automated quality coverage is reviewed today
+**When** the repository is inspected
+**Then** automated tests cover scoring logic and dashboard-insight calculations
+**And** create, edit, delete, and end-to-end route flows still require manual verification before broader release

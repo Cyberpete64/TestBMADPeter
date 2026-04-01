@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { formatHandicapValue } from "@/lib/handicap";
 import { getRounds } from "@/lib/round-repository";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function RoundsPage() {
                   </div>
                   <div>
                     <div className="stat-label">Handicap</div>
-                    <strong>{round.enteredHandicap}</strong>
+                    <strong>{formatHandicapValue(round.enteredHandicap)}</strong>
                   </div>
                 </div>
 

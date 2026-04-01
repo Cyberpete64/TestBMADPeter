@@ -1,4 +1,5 @@
 import type { PersistedRound } from "@/lib/round-domain";
+import { formatHandicapValue } from "@/lib/handicap";
 
 type RoundDetailViewProps = {
   round: PersistedRound;
@@ -33,7 +34,7 @@ export function RoundDetailView({ round }: RoundDetailViewProps) {
           </article>
           <article className="stat-card">
             <div className="stat-label">Registrerat handicap</div>
-            <div className="stat-value">{round.enteredHandicap}</div>
+            <div className="stat-value">{formatHandicapValue(round.enteredHandicap)}</div>
           </article>
         </div>
       </section>

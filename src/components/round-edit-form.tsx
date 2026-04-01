@@ -10,6 +10,10 @@ import {
   getHoleReferencesForTee,
   primaryCourse,
 } from "@/lib/golf-course-data";
+import {
+  isValidHandicapInput,
+  normalizeHandicapInput,
+} from "@/lib/handicap";
 import type { PersistedRound } from "@/lib/round-domain";
 import { createDraftFromPersistedRound } from "@/lib/round-drafts";
 import type { HoleEntry, RoundEntryDraft } from "@/lib/round-entry";
@@ -58,16 +62,18 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
     field: keyof RoundEntryDraft["setup"],
     value: string,
   ) {
+    const normalizedValue =
+      field === "enteredHandicap" ? normalizeHandicapInput(value) : value;
     const teeCode =
       field === "teeCode"
-        ? (value as RoundEntryDraft["setup"]["teeCode"])
+        ? (normalizedValue as RoundEntryDraft["setup"]["teeCode"])
         : draft.setup.teeCode;
 
     setDraft((current) => ({
       ...current,
       setup: {
         ...current.setup,
-        [field]: field === "teeCode" ? teeCode : value,
+        [field]: field === "teeCode" ? teeCode : normalizedValue,
         teeCode,
         teeLabel: getSelectedTeeLabel(teeCode),
         courseSlug: primaryCourse.slug,
@@ -130,11 +136,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
       nextSetupErrors.playedOn = "Välj speldatum innan du sparar.";
     }
 
-    if (
-      draft.setup.enteredHandicap.trim() === "" ||
-      Number.isNaN(Number(draft.setup.enteredHandicap)) ||
-      Number(draft.setup.enteredHandicap) < 0
-    ) {
+    if (!isValidHandicapInput(draft.setup.enteredHandicap)) {
       nextSetupErrors.enteredHandicap = "Ange ett giltigt handicap innan du sparar.";
     }
 
@@ -380,6 +382,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
             <input
               id="enteredHandicap"
               inputMode="decimal"
+              placeholder="t.ex. 18,4"
               aria-describedby={buildDescribedByIds(
                 setupErrors.enteredHandicap ? "enteredHandicap-error" : undefined,
               )}

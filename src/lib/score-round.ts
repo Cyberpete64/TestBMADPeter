@@ -1,5 +1,6 @@
 import type { PersistedHole, PersistedRound } from "@/lib/round-domain";
 import { getHoleReferencesForDraft, type RoundEntryDraft } from "@/lib/round-entry";
+import { parseHandicapInput } from "@/lib/handicap";
 import { getReceivedStrokes, getStablefordPoints } from "./scoring";
 
 export function scoreRoundDraft(
@@ -7,7 +8,8 @@ export function scoreRoundDraft(
   roundId: string,
   createdAt: string,
 ): PersistedRound {
-  const handicapStrokes = Math.floor(Number(draft.setup.enteredHandicap));
+  const parsedHandicap = parseHandicapInput(draft.setup.enteredHandicap);
+  const handicapStrokes = Math.floor(parsedHandicap);
   const holeReferences = getHoleReferencesForDraft(draft);
 
   const holes: PersistedHole[] = holeReferences.map((holeReference) => {
@@ -54,7 +56,7 @@ export function scoreRoundDraft(
     courseShortLabel: draft.setup.courseShortLabel,
     teeCode: draft.setup.teeCode,
     teeLabel: draft.setup.teeLabel,
-    enteredHandicap: Number(draft.setup.enteredHandicap),
+    enteredHandicap: parsedHandicap,
     totalScore,
     totalPutts,
     totalStablefordPoints,

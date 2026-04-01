@@ -6,7 +6,7 @@ import { primaryCourse } from "@/lib/golf-course-data";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: `${primaryCourse.shortLabel} Rondtracker`,
+  title: `${primaryCourse.shortLabel} Rondapp`,
   description: `Mobilvänlig registrering och poängräkning för ronder på ${primaryCourse.displayName}.`,
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
           <header className="shell__header">
             <div className="shell__header-inner">
               <Link className="shell__brand" href="/">
-                <span className="shell__eyebrow">Golf rondtracker</span>
+                <span className="shell__eyebrow">Golfapp för ronder</span>
                 <span className="shell__title">{primaryCourse.shortLabel} MVP</span>
               </Link>
               <nav className="shell__nav" aria-label="Primär navigering">

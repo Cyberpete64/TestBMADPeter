@@ -1,4 +1,5 @@
 import { availableTees, primaryCourse } from "@/lib/golf-course-data";
+import { formatHandicapValue } from "@/lib/handicap";
 import type { PersistedRound } from "@/lib/round-domain";
 import type { RoundEntryDraft } from "@/lib/round-entry";
 
@@ -14,7 +15,7 @@ export function createDraftFromPersistedRound(
       courseShortLabel: round.courseShortLabel,
       teeCode: round.teeCode,
       teeLabel: round.teeLabel,
-      enteredHandicap: String(round.enteredHandicap),
+      enteredHandicap: formatHandicapValue(round.enteredHandicap),
     },
     holes: round.holes.map((hole) => ({
       holeNumber: hole.holeNumber,
