@@ -14,6 +14,8 @@ inputDocuments:
 
 This document defines how the frontend for Golf Round Tracker should be designed and built for the MVP. It translates the product brief and architecture draft into a page-level, component-level, and implementation-level specification for a mobile-first web application.
 
+For this project, `frontend-spec-TestBMADPeter-2026-03-19.md` is the formal UX source of truth for the MVP.
+
 ## Product Experience Summary
 
 The frontend should feel like a focused personal sports tracker, not an admin system. The user should be able to:
