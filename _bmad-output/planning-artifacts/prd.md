@@ -164,6 +164,8 @@ The novelty is execution quality rather than a new category or AI-driven product
 
 The product is a server-backed web application with a mobile-first UI, read-heavy dashboard views, and form-heavy transactional round entry.
 
+For this project, `frontend-spec-TestBMADPeter-2026-03-19.md` is the formal UX source of truth for the MVP and should be used as the primary reference for page behavior, interaction patterns, and UX decisions.
+
 ### Technical Architecture Considerations
 
 - The product requires both read views and write flows.
