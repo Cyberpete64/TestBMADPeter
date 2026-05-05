@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import type { RoundEntryDraft } from "@/lib/round-entry";
 import { normalizeDraftCourseMetadata } from "@/lib/round-drafts";
 import { isRoundEntryDraftComplete } from "@/lib/round-entry";
@@ -32,11 +34,16 @@ export async function updateRoundDraftAction(
   );
 
   await updateRound(rescoredRound);
+  revalidatePath("/");
+  revalidatePath("/rounds");
+  revalidatePath(`/rounds/${roundId}`);
 
   return { roundId };
 }
 
 export async function deleteRoundAction(roundId: string) {
   await deleteRound(roundId);
+  revalidatePath("/");
+  revalidatePath("/rounds");
   return { success: true };
 }

@@ -97,6 +97,17 @@ select {
   gap: 0.55rem;
 }
 
+.shell__auth {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shell__user {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
 .shell__nav-link {
   padding: 0.75rem 1rem;
   border-radius: 999px;
@@ -334,6 +345,30 @@ select {
   border: 1px solid rgba(155, 28, 28, 0.18);
   border-radius: var(--radius-sm);
   background: rgba(155, 28, 28, 0.07);
+}
+
+.form-success {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(31, 90, 58, 0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(31, 90, 58, 0.08);
+  color: var(--accent-strong);
+}
+
+.auth-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.auth-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.auth-hero {
+  display: grid;
+  gap: 0.75rem;
 }
 
 .sr-only {
@@ -585,6 +620,12 @@ select {
     gap: 0.4rem;
   }
 
+  .shell__auth {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .shell__nav-link {
     flex: 1;
     text-align: center;
@@ -632,6 +673,10 @@ select {
   }
 
   .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-grid {
     grid-template-columns: 1fr;
   }
 

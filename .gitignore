@@ -1,10 +1,14 @@
 .next/
 .next-build-check/
+.next-build-check-*/
 node_modules/
 out/
+.env.local
+.env*.local
 *.log
 .agents/
 tsconfig.tsbuildinfo
 _bmad/
 _bmad-output/
 package/
+data/rounds.json
