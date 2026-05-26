@@ -745,29 +745,69 @@ select {
 }
 
 @media (max-width: 720px) {
+  .shell__header::before {
+    height: 3px;
+  }
+
   .shell__header-inner {
     align-items: flex-start;
     flex-direction: column;
+    gap: 0.55rem;
     justify-content: center;
-    padding: 1rem 0 0.85rem;
+    min-height: auto;
+    padding: 0.55rem 0 0.6rem;
+  }
+
+  .shell__brand {
+    gap: 0.55rem;
+  }
+
+  .shell__brand-mark {
+    width: 2.65rem;
+    height: 1.65rem;
+    font-size: 0.9rem;
+  }
+
+  .shell__brand-copy {
+    gap: 0.05rem;
+  }
+
+  .shell__eyebrow {
+    font-size: 0.68rem;
+  }
+
+  .shell__title {
+    font-size: 0.95rem;
   }
 
   .shell__nav {
     width: 100%;
     justify-content: space-between;
-    gap: 0.4rem;
+    gap: 0.3rem;
   }
 
   .shell__auth {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+    gap: 0.45rem;
+  }
+
+  .shell__user {
+    overflow-wrap: anywhere;
+    font-size: 0.84rem;
   }
 
   .shell__nav-link {
     flex: 1;
     text-align: center;
-    padding: 0.85rem 0.55rem;
+    padding: 0.55rem 0.45rem;
+    font-size: 0.9rem;
+  }
+
+  .shell__auth .button-secondary {
+    min-height: 2.4rem;
+    padding: 0.55rem 0.75rem;
   }
 
   .hero,
@@ -836,7 +876,16 @@ select {
   }
 
   .sticky-action {
-    padding: 0.9rem;
+    bottom: max(0.4rem, env(safe-area-inset-bottom, 0px));
+    margin-top: 1rem;
+    padding: 0.55rem;
+  }
+
+  .sticky-action .button,
+  .sticky-action .button-secondary,
+  .sticky-action .button-danger {
+    min-height: 2.65rem;
+    padding: 0.65rem 0.9rem;
   }
 
   .sticky-action--split .button {
@@ -862,6 +911,11 @@ select {
     width: min(calc(100% - 1rem), var(--content-width));
   }
 
+  .shell__header-inner {
+    gap: 0.45rem;
+    padding: 0.45rem 0 0.5rem;
+  }
+
   .shell__nav {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -870,8 +924,8 @@ select {
 
   .shell__nav-link {
     min-width: 0;
-    padding: 0.8rem 0.45rem;
-    font-size: 0.92rem;
+    padding: 0.5rem 0.3rem;
+    font-size: 0.85rem;
   }
 
   .hero h1,
