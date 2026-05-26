@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import { calculateDashboardInsights } from "../src/lib/dashboard-insights-core.ts";
+import { getDistanceMeters } from "../src/lib/geo-distance.ts";
 import { getReceivedStrokes, getStablefordPoints } from "../src/lib/scoring.ts";
 
 function runTest(name: string, assertion: () => void) {
@@ -37,6 +38,27 @@ runTest("stableford scoring rewards stronger net scores", () => {
   assert.equal(getStablefordPoints(4, 5, 1), 2);
   assert.equal(getStablefordPoints(4, 4, 1), 3);
   assert.equal(getStablefordPoints(4, 3, 1), 4);
+});
+
+runTest("geo distance returns straight-line meter distances", () => {
+  assert.equal(
+    Math.round(
+      getDistanceMeters(
+        { latitude: 63.1811443418, longitude: 14.488646542 },
+        { latitude: 63.1811443418, longitude: 14.488646542 },
+      ),
+    ),
+    0,
+  );
+  assert.equal(
+    Math.round(
+      getDistanceMeters(
+        { latitude: 0, longitude: 0 },
+        { latitude: 0, longitude: 1 },
+      ),
+    ),
+    111195,
+  );
 });
 
 runTest(

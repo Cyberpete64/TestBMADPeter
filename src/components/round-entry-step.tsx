@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import type { HoleReference } from "@/lib/golf-course-data";
+import type { GeoPoint } from "@/lib/geo-distance";
+import {
+  formatDistanceMeters,
+  getDistanceMeters,
+} from "@/lib/geo-distance";
 import { readRoundSetupFromStorage, type RoundSetup } from "@/lib/round-setup";
 import {
   ensureRoundEntryDraft,
@@ -25,10 +31,140 @@ type RoundEntryStepProps = {
 };
 
 type HoleErrorMap = Record<number, { strokes?: string; putts?: string }>;
+type LiveGpsStatus =
+  | "idle"
+  | "locating"
+  | "active"
+  | "unsupported"
+  | "denied"
+  | "unavailable";
+
+type LiveGpsState = {
+  status: LiveGpsStatus;
+  position: GeoPoint | null;
+  accuracyMeters: number | null;
+  updatedAt: Date | null;
+  message: string | null;
+};
+
+const initialGpsState: LiveGpsState = {
+  status: "idle",
+  position: null,
+  accuracyMeters: null,
+  updatedAt: null,
+  message: null,
+};
 
 function buildDescribedByIds(...ids: Array<string | undefined>) {
   const value = ids.filter(Boolean).join(" ");
   return value === "" ? undefined : value;
+}
+
+function formatPositionTime(value: Date) {
+  return value.toLocaleTimeString("sv-SE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function getGpsErrorState(error: GeolocationPositionError): LiveGpsState {
+  if (error.code === error.PERMISSION_DENIED) {
+    return {
+      ...initialGpsState,
+      status: "denied",
+      message:
+        "Platsåtkomst nekades. Tillåt platsåtkomst i webbläsaren för att visa GPS-avstånd.",
+    };
+  }
+
+  if (error.code === error.TIMEOUT) {
+    return {
+      ...initialGpsState,
+      status: "unavailable",
+      message:
+        "GPS-positionen hann inte hämtas. Prova igen med fri sikt mot himlen.",
+    };
+  }
+
+  return {
+    ...initialGpsState,
+    status: "unavailable",
+    message: "GPS-positionen är inte tillgänglig just nu.",
+  };
+}
+
+function getGpsStatusText(gpsState: LiveGpsState) {
+  if (gpsState.status === "idle") {
+    return "Starta GPS för live-avstånd till green. Positionen sparas inte.";
+  }
+
+  if (gpsState.status === "locating") {
+    return "Väntar på GPS-position...";
+  }
+
+  if (gpsState.status === "active" && gpsState.updatedAt) {
+    const accuracyText =
+      gpsState.accuracyMeters === null
+        ? ""
+        : ` / noggrannhet ±${Math.round(gpsState.accuracyMeters)} m`;
+    return `Live uppdaterat ${formatPositionTime(gpsState.updatedAt)}${accuracyText}.`;
+  }
+
+  return gpsState.message ?? "GPS-avstånd är inte tillgängligt just nu.";
+}
+
+function HoleGreenDistance({
+  gpsState,
+  hole,
+}: {
+  gpsState: LiveGpsState;
+  hole: HoleReference;
+}) {
+  if (gpsState.status === "locating") {
+    return (
+      <div className="green-distance" aria-live="polite">
+        <span className="green-distance__status">Väntar på GPS-position...</span>
+      </div>
+    );
+  }
+
+  if (!gpsState.position) {
+    return (
+      <div className="green-distance" aria-live="polite">
+        <span className="green-distance__status">
+          {gpsState.message ?? "GPS-avstånd är inte tillgängligt."}
+        </span>
+      </div>
+    );
+  }
+
+  const frontDistance = getDistanceMeters(gpsState.position, hole.green.front);
+  const centerDistance = getDistanceMeters(gpsState.position, hole.green.center);
+  const backDistance = getDistanceMeters(gpsState.position, hole.green.back);
+
+  return (
+    <div className="green-distance" aria-live="polite">
+      <div className="green-distance__row">
+        <div>
+          <span>Front</span>
+          <strong>{formatDistanceMeters(frontDistance)}</strong>
+        </div>
+        <div>
+          <span>Center</span>
+          <strong>{formatDistanceMeters(centerDistance)}</strong>
+        </div>
+        <div>
+          <span>Bak</span>
+          <strong>{formatDistanceMeters(backDistance)}</strong>
+        </div>
+      </div>
+      <p className="muted">
+        Raka GPS-meter till green. Använd inte slope, vind eller klubbrekommendation
+        vid tävling.
+      </p>
+    </div>
+  );
 }
 
 export function RoundEntryStep({
@@ -46,6 +182,8 @@ export function RoundEntryStep({
   const [draft, setDraft] = useState<RoundEntryDraft | null>(null);
   const [errors, setErrors] = useState<HoleErrorMap>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [gpsState, setGpsState] = useState<LiveGpsState>(initialGpsState);
+  const gpsWatchId = useRef<number | null>(null);
 
   useEffect(() => {
     const storedSetup = readRoundSetupFromStorage();
@@ -58,6 +196,15 @@ export function RoundEntryStep({
     setSetup(storedSetup);
     setDraft(nextDraft);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (gpsWatchId.current !== null) {
+        navigator.geolocation.clearWatch(gpsWatchId.current);
+      }
+    },
+    [],
+  );
 
   const holeReferences = useMemo(() => {
     if (!draft) {
@@ -135,6 +282,65 @@ export function RoundEntryStep({
     return true;
   }
 
+  function startLiveGps() {
+    if (!("geolocation" in navigator)) {
+      setGpsState({
+        ...initialGpsState,
+        status: "unsupported",
+        message:
+          "Den här webbläsaren saknar stöd för GPS-positionering.",
+      });
+      return;
+    }
+
+    setGpsState({
+      ...initialGpsState,
+      status: "locating",
+      message: "Väntar på GPS-position...",
+    });
+
+    if (gpsWatchId.current !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId.current);
+    }
+
+    gpsWatchId.current = navigator.geolocation.watchPosition(
+      (position) => {
+        setGpsState({
+          status: "active",
+          position: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+          accuracyMeters: position.coords.accuracy,
+          updatedAt: new Date(position.timestamp),
+          message: null,
+        });
+      },
+      (error) => {
+        if (gpsWatchId.current !== null) {
+          navigator.geolocation.clearWatch(gpsWatchId.current);
+          gpsWatchId.current = null;
+        }
+
+        setGpsState(getGpsErrorState(error));
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5_000,
+        timeout: 15_000,
+      },
+    );
+  }
+
+  function stopLiveGps() {
+    if (gpsWatchId.current !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId.current);
+      gpsWatchId.current = null;
+    }
+
+    setGpsState(initialGpsState);
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -200,6 +406,33 @@ export function RoundEntryStep({
             <strong>{setup.enteredHandicap}</strong>
           </div>
         </div>
+
+        <div className="gps-control">
+          <div>
+            <span className="pill">GPS-avstånd</span>
+            <h3>Live till green</h3>
+            <p className="muted">
+              Visar front, center och bakkant för hålen i det här steget. GPS
+              används bara lokalt i mobilen och sparas inte med ronden.
+            </p>
+          </div>
+          <button
+            className="button-secondary"
+            onClick={
+              gpsState.status === "active" || gpsState.status === "locating"
+                ? stopLiveGps
+                : startLiveGps
+            }
+            type="button"
+          >
+            {gpsState.status === "active" || gpsState.status === "locating"
+              ? "Stoppa GPS"
+              : "Starta GPS"}
+          </button>
+          <p className="gps-control__status" aria-live="polite">
+            {getGpsStatusText(gpsState)}
+          </p>
+        </div>
       </div>
 
       <div className="hole-grid">
@@ -220,6 +453,9 @@ export function RoundEntryStep({
                 <span className="pill">#{hole.holeNumber}</span>
               </div>
               <div className="field__hint">{hole.distanceMeters} meter</div>
+              {gpsState.status !== "idle" ? (
+                <HoleGreenDistance gpsState={gpsState} hole={hole} />
+              ) : null}
 
               <div className="hole-card__fields">
                 <div className="field">
