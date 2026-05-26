@@ -11,6 +11,7 @@ Mobile-first web app for logging 18-hole golf rounds at Östersund-Frösö Golfk
 - Full 18-hole rounds
 - Hole-by-hole entry for strokes and putts
 - Automatic Stableford scoring
+- Live GPS distance to front, center, and back of green during round entry
 - Round history with create, review, edit, and delete flows
 - Dashboard with:
   - total rounds played
@@ -112,7 +113,7 @@ If `E2E_USER_EMAIL` or `E2E_USER_PASSWORD` is missing, the E2E test skips withou
 
 ## Data storage
 
-Saved rounds are stored in Supabase tables for the authenticated user. Round drafts are kept temporarily in browser session storage while the create-round flow is in progress.
+Saved rounds are stored in Supabase tables for the authenticated user. Round drafts are kept temporarily in browser session storage while the create-round flow is in progress. Live GPS position is used only in the browser while the user has the round page open and is not saved with the round.
 
 ## Known limits
 
@@ -121,6 +122,8 @@ Saved rounds are stored in Supabase tables for the authenticated user. Round dra
 - Full 18-hole rounds only
 - No official handicap index recalculation yet
 - No multi-player round entry yet
+- GPS distance is straight-line distance only and depends on the device, browser permission, and current signal accuracy
+- iPhone GPS in Safari/PWA requires a secure origin such as HTTPS for real device use
 
 ## Release candidate status
 
