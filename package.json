@@ -2,12 +2,16 @@
   "name": "golf-round-tracker",
   "private": true,
   "version": "0.1.0-rc.1",
+  "type": "module",
   "scripts": {
     "dev": "node --use-system-ca ./node_modules/next/dist/bin/next dev --webpack",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/run-unit-tests.ts",
+    "test": "npm run test:unit",
+    "test:unit": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/run-unit-tests.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
     "check": "powershell -ExecutionPolicy Bypass -File scripts/release-guardrails.ps1",
     "migrate:rounds": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/migrate-rounds-to-supabase.ts"
   },
@@ -20,6 +24,7 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",

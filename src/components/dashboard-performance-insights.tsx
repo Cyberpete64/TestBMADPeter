@@ -89,6 +89,19 @@ export function DashboardPerformanceInsights({
         </article>
       </div>
 
+      <div className="coaching-grid" aria-label="Coachande rekommendationer">
+        {insights.coachingInsights.map((insight) => (
+          <article
+            className={`coaching-card coaching-card--${insight.tone}`}
+            key={insight.title}
+          >
+            <div className="stat-label">{insight.title}</div>
+            <strong>{insight.value}</strong>
+            <p className="muted">{insight.detail}</p>
+          </article>
+        ))}
+      </div>
+
       <div className="hole-insights-grid">
         {insights.holeInsights.map((hole) => (
           <article className="hole-insight-card" key={hole.holeNumber}>
