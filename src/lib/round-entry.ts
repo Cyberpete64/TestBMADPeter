@@ -1,4 +1,9 @@
 import {
+  readDurableClientItem,
+  removeDurableClientItem,
+  writeDurableClientItem,
+} from "@/lib/browser-storage";
+import {
   getHoleReferencesForTee,
   type HoleReference,
   type TeeCode,
@@ -18,6 +23,18 @@ export type RoundEntryDraft = {
 
 const STORAGE_KEY = "golf-round-tracker/round-entry";
 
+export function canReuseRoundEntryDraft(
+  draft: RoundEntryDraft,
+  setup: RoundSetup,
+) {
+  return (
+    draft.setup.courseSlug === setup.courseSlug &&
+    draft.setup.playedOn === setup.playedOn &&
+    draft.setup.playerName === setup.playerName &&
+    draft.setup.teeCode === setup.teeCode
+  );
+}
+
 export function createInitialHoleEntries(teeCode: TeeCode): HoleEntry[] {
   return getHoleReferencesForTee(teeCode).map((hole) => ({
     holeNumber: hole.holeNumber,
@@ -34,15 +51,15 @@ export function createRoundEntryDraft(setup: RoundSetup): RoundEntryDraft {
 }
 
 export function persistRoundEntryDraft(draft: RoundEntryDraft) {
-  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  writeDurableClientItem(STORAGE_KEY, JSON.stringify(draft));
 }
 
 export function clearRoundEntryDraft() {
-  window.sessionStorage.removeItem(STORAGE_KEY);
+  removeDurableClientItem(STORAGE_KEY);
 }
 
 export function readRoundEntryDraft(): RoundEntryDraft | null {
-  const rawValue = window.sessionStorage.getItem(STORAGE_KEY);
+  const rawValue = readDurableClientItem(STORAGE_KEY);
 
   if (!rawValue) {
     return null;
@@ -58,13 +75,13 @@ export function readRoundEntryDraft(): RoundEntryDraft | null {
 export function ensureRoundEntryDraft(setup: RoundSetup): RoundEntryDraft {
   const existing = readRoundEntryDraft();
 
-  if (
-    existing &&
-    existing.setup.courseSlug === setup.courseSlug &&
-    existing.setup.playedOn === setup.playedOn &&
-    existing.setup.playerName === setup.playerName
-  ) {
-    return existing;
+  if (existing && canReuseRoundEntryDraft(existing, setup)) {
+    const nextDraft = {
+      ...existing,
+      setup,
+    };
+    persistRoundEntryDraft(nextDraft);
+    return nextDraft;
   }
 
   const nextDraft = createRoundEntryDraft(setup);

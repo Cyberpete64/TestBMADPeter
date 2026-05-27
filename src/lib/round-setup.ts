@@ -1,3 +1,9 @@
+import {
+  readDurableClientItem,
+  removeDurableClientItem,
+  writeDurableClientItem,
+} from "@/lib/browser-storage";
+
 export type RoundSetup = {
   playerName: string;
   playedOn: string;
@@ -12,15 +18,15 @@ export type RoundSetup = {
 const STORAGE_KEY = "golf-round-tracker/round-setup";
 
 export function persistRoundSetupToStorage(setup: RoundSetup) {
-  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(setup));
+  writeDurableClientItem(STORAGE_KEY, JSON.stringify(setup));
 }
 
 export function clearRoundSetupFromStorage() {
-  window.sessionStorage.removeItem(STORAGE_KEY);
+  removeDurableClientItem(STORAGE_KEY);
 }
 
 export function readRoundSetupFromStorage(): RoundSetup | null {
-  const rawValue = window.sessionStorage.getItem(STORAGE_KEY);
+  const rawValue = readDurableClientItem(STORAGE_KEY);
 
   if (!rawValue) {
     return null;

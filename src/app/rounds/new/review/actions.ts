@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { normalizeDraftCourseMetadata } from "@/lib/round-drafts";
+import { clearActiveRoundDraft } from "@/lib/round-draft-repository";
 import {
   isRoundEntryDraftComplete,
   type RoundEntryDraft,
@@ -22,6 +23,7 @@ export async function saveRoundDraftAction(draft: RoundEntryDraft) {
   const scoredRound = scoreRoundDraft(normalizedDraft, roundId, now);
 
   await saveRound(scoredRound);
+  await clearActiveRoundDraft().catch(() => undefined);
   revalidatePath("/");
   revalidatePath("/rounds");
   revalidatePath(`/rounds/${roundId}`);

@@ -29,11 +29,21 @@ create table if not exists public.round_holes (
   primary key (round_id, hole_number)
 );
 
+create table if not exists public.round_drafts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  draft jsonb not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (user_id)
+);
+
 create index if not exists rounds_user_id_played_on_idx
   on public.rounds (user_id, played_on desc, created_at desc);
 
 alter table public.rounds enable row level security;
 alter table public.round_holes enable row level security;
+alter table public.round_drafts enable row level security;
 
 create policy "Users can view their own rounds"
   on public.rounds
@@ -119,3 +129,28 @@ create policy "Users can delete holes for their own rounds"
         and rounds.user_id = auth.uid()
     )
   );
+
+create policy "Users can view their own round draft"
+  on public.round_drafts
+  for select
+  to authenticated
+  using (auth.uid() is not null and auth.uid() = user_id);
+
+create policy "Users can insert their own round draft"
+  on public.round_drafts
+  for insert
+  to authenticated
+  with check (auth.uid() is not null and auth.uid() = user_id);
+
+create policy "Users can update their own round draft"
+  on public.round_drafts
+  for update
+  to authenticated
+  using (auth.uid() is not null and auth.uid() = user_id)
+  with check (auth.uid() is not null and auth.uid() = user_id);
+
+create policy "Users can delete their own round draft"
+  on public.round_drafts
+  for delete
+  to authenticated
+  using (auth.uid() is not null and auth.uid() = user_id);

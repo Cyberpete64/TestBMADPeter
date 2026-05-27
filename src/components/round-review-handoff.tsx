@@ -4,24 +4,62 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
+import { getActiveRoundDraftAction } from "@/app/rounds/new/draft/actions";
 import { saveRoundDraftAction } from "@/app/rounds/new/review/actions";
 import {
   clearRoundEntryDraft,
   getHoleReferencesForDraft,
   isRoundEntryDraftComplete,
+  persistRoundEntryDraft,
   readRoundEntryDraft,
   type RoundEntryDraft,
 } from "@/lib/round-entry";
-import { clearRoundSetupFromStorage } from "@/lib/round-setup";
+import {
+  clearRoundSetupFromStorage,
+  persistRoundSetupToStorage,
+} from "@/lib/round-setup";
 
 export function RoundReviewHandoff() {
   const router = useRouter();
   const [draft, setDraft] = useState<RoundEntryDraft | null>(null);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    setDraft(readRoundEntryDraft());
+    const storedDraft = readRoundEntryDraft();
+
+    if (storedDraft) {
+      setDraft(storedDraft);
+      setIsLoadingDraft(false);
+      return;
+    }
+
+    let isCurrent = true;
+
+    void getActiveRoundDraftAction()
+      .then((serverDraft) => {
+        if (!isCurrent) {
+          return;
+        }
+
+        if (serverDraft) {
+          persistRoundSetupToStorage(serverDraft.setup);
+          persistRoundEntryDraft(serverDraft);
+          setDraft(serverDraft);
+        }
+
+        setIsLoadingDraft(false);
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setIsLoadingDraft(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   const totals = useMemo(() => {
@@ -62,6 +100,15 @@ export function RoundReviewHandoff() {
         );
       }
     });
+  }
+
+  if (isLoadingDraft) {
+    return (
+      <div className="empty-card">
+        <h2>Hämtar rondutkast...</h2>
+        <p className="muted">Vänta ett ögonblick medan vi letar efter sparad score.</p>
+      </div>
+    );
   }
 
   if (!draft) {

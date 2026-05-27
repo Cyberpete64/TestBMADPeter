@@ -1,16 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { z } from "zod";
 
+import {
+  getActiveRoundDraftAction,
+  saveActiveRoundDraftAction,
+} from "@/app/rounds/new/draft/actions";
 import { availableTees, primaryCourse } from "@/lib/golf-course-data";
 import {
   isValidHandicapInput,
   normalizeHandicapInput,
 } from "@/lib/handicap";
 import {
+  canReuseRoundEntryDraft,
+  createRoundEntryDraft,
+  persistRoundEntryDraft,
+  readRoundEntryDraft,
+} from "@/lib/round-entry";
+import {
   persistRoundSetupToStorage,
+  readRoundSetupFromStorage,
   type RoundSetup,
 } from "@/lib/round-setup";
 
@@ -44,21 +55,82 @@ function buildDescribedByIds(...ids: Array<string | undefined>) {
   return value === "" ? undefined : value;
 }
 
+function getFormValuesFromSetup(setup: RoundSetup): RoundSetupFormValues {
+  return {
+    playerName: setup.playerName,
+    playedOn: setup.playedOn,
+    courseSlug: setup.courseSlug,
+    teeCode: setup.teeCode,
+    enteredHandicap: setup.enteredHandicap,
+  };
+}
+
+function getDraftForSetup(setup: RoundSetup) {
+  const existingDraft = readRoundEntryDraft();
+
+  if (existingDraft && canReuseRoundEntryDraft(existingDraft, setup)) {
+    return {
+      ...existingDraft,
+      setup,
+    };
+  }
+
+  return createRoundEntryDraft(setup);
+}
+
 export function RoundSetupForm() {
   const router = useRouter();
   const [values, setValues] = useState<RoundSetupFormValues>(defaultValues);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const hasEditedValues = useRef(false);
+  const [isPending, startTransition] = useTransition();
 
   const isValid = useMemo(
     () => roundSetupSchema.safeParse(values).success,
     [values],
   );
 
+  useEffect(() => {
+    const storedSetup = readRoundSetupFromStorage();
+    const storedDraft = readRoundEntryDraft();
+
+    if (storedSetup) {
+      setValues(getFormValuesFromSetup(storedSetup));
+      return;
+    }
+
+    if (storedDraft) {
+      persistRoundSetupToStorage(storedDraft.setup);
+      setValues(getFormValuesFromSetup(storedDraft.setup));
+      return;
+    }
+
+    let isCurrent = true;
+
+    void getActiveRoundDraftAction()
+      .then((serverDraft) => {
+        if (!isCurrent || !serverDraft || hasEditedValues.current) {
+          return;
+        }
+
+        persistRoundSetupToStorage(serverDraft.setup);
+        persistRoundEntryDraft(serverDraft);
+        setValues(getFormValuesFromSetup(serverDraft.setup));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
   function updateValue<K extends keyof RoundSetupFormValues>(
     key: K,
     value: RoundSetupFormValues[K],
   ) {
+    hasEditedValues.current = true;
+
     const nextValue =
       key === "enteredHandicap" && typeof value === "string"
         ? normalizeHandicapInput(value)
@@ -111,7 +183,18 @@ export function RoundSetupForm() {
     };
 
     persistRoundSetupToStorage(setup);
-    router.push("/rounds/new/front-nine");
+    const draft = getDraftForSetup(setup);
+    persistRoundEntryDraft(draft);
+
+    startTransition(async () => {
+      try {
+        await saveActiveRoundDraftAction(draft);
+      } catch {
+        // Local durable storage still lets the player continue if autosave is down.
+      } finally {
+        router.push("/rounds/new/front-nine");
+      }
+    });
   }
 
   return (
@@ -244,8 +327,8 @@ export function RoundSetupForm() {
       ) : null}
 
       <div className="sticky-action">
-        <button className="button" disabled={!isValid} type="submit">
-          Fortsätt till Fram 9
+        <button className="button" disabled={!isValid || isPending} type="submit">
+          {isPending ? "Förbereder rond..." : "Fortsätt till Fram 9"}
         </button>
       </div>
     </form>

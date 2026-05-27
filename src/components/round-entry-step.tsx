@@ -4,17 +4,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  getActiveRoundDraftAction,
+  saveActiveRoundDraftAction,
+} from "@/app/rounds/new/draft/actions";
 import type { HoleReference } from "@/lib/golf-course-data";
 import type { GeoPoint } from "@/lib/geo-distance";
 import {
   formatDistanceMeters,
   getDistanceMeters,
 } from "@/lib/geo-distance";
-import { readRoundSetupFromStorage, type RoundSetup } from "@/lib/round-setup";
+import {
+  persistRoundSetupToStorage,
+  readRoundSetupFromStorage,
+  type RoundSetup,
+} from "@/lib/round-setup";
 import {
   ensureRoundEntryDraft,
   getHoleReferencesForDraft,
   persistRoundEntryDraft,
+  readRoundEntryDraft,
   updateHoleEntry,
   type RoundEntryDraft,
 } from "@/lib/round-entry";
@@ -182,26 +191,71 @@ export function RoundEntryStep({
   const [draft, setDraft] = useState<RoundEntryDraft | null>(null);
   const [errors, setErrors] = useState<HoleErrorMap>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(true);
+  const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const [gpsState, setGpsState] = useState<LiveGpsState>(initialGpsState);
   const gpsWatchId = useRef<number | null>(null);
+  const latestServerDraft = useRef<RoundEntryDraft | null>(null);
+  const isServerSaveInFlight = useRef(false);
+  const hasQueuedServerSave = useRef(false);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    const storedSetup = readRoundSetupFromStorage();
+    function applyDraft(nextDraft: RoundEntryDraft) {
+      persistRoundSetupToStorage(nextDraft.setup);
+      persistRoundEntryDraft(nextDraft);
+      setSetup(nextDraft.setup);
+      setDraft(nextDraft);
+    }
 
-    if (!storedSetup) {
+    const storedSetup = readRoundSetupFromStorage();
+    const storedDraft = readRoundEntryDraft();
+
+    if (storedDraft) {
+      applyDraft(storedDraft);
+      setIsLoadingDraft(false);
       return;
     }
 
-    const nextDraft = ensureRoundEntryDraft(storedSetup);
-    setSetup(storedSetup);
-    setDraft(nextDraft);
+    if (storedSetup) {
+      applyDraft(ensureRoundEntryDraft(storedSetup));
+      setIsLoadingDraft(false);
+      return;
+    }
+
+    let isCurrent = true;
+
+    getActiveRoundDraftAction()
+      .then((serverDraft) => {
+        if (!isCurrent || !serverDraft) {
+          return;
+        }
+
+        applyDraft(serverDraft);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (isCurrent) {
+          setIsLoadingDraft(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   useEffect(
-    () => () => {
-      if (gpsWatchId.current !== null) {
-        navigator.geolocation.clearWatch(gpsWatchId.current);
-      }
+    () => {
+      isMounted.current = true;
+
+      return () => {
+        isMounted.current = false;
+
+        if (gpsWatchId.current !== null) {
+          navigator.geolocation.clearWatch(gpsWatchId.current);
+        }
+      };
     },
     [],
   );
@@ -230,6 +284,41 @@ export function RoundEntryStep({
     (hole) => hole.strokes.trim() !== "" && hole.putts.trim() !== "",
   );
 
+  async function flushServerDraftSave() {
+    if (isServerSaveInFlight.current) {
+      return;
+    }
+
+    isServerSaveInFlight.current = true;
+
+    while (hasQueuedServerSave.current && latestServerDraft.current) {
+      hasQueuedServerSave.current = false;
+
+      try {
+        await saveActiveRoundDraftAction(latestServerDraft.current);
+
+        if (isMounted.current) {
+          setAutosaveError(null);
+        }
+      } catch {
+        if (isMounted.current) {
+          setAutosaveError(
+            "Utkastet sparas lokalt just nu. Serverautosparning försöker igen vid nästa ändring.",
+          );
+        }
+        break;
+      }
+    }
+
+    isServerSaveInFlight.current = false;
+  }
+
+  function queueServerDraftSave(nextDraft: RoundEntryDraft) {
+    latestServerDraft.current = nextDraft;
+    hasQueuedServerSave.current = true;
+    void flushServerDraftSave();
+  }
+
   function setHoleValue(
     holeNumber: number,
     field: "strokes" | "putts",
@@ -243,6 +332,7 @@ export function RoundEntryStep({
     const nextDraft = updateHoleEntry(draft, holeNumber, field, sanitizedValue);
     setDraft(nextDraft);
     persistRoundEntryDraft(nextDraft);
+    queueServerDraftSave(nextDraft);
     setErrors((current) => ({
       ...current,
       [holeNumber]: {
@@ -350,9 +440,19 @@ export function RoundEntryStep({
 
     if (draft) {
       persistRoundEntryDraft(draft);
+      queueServerDraftSave(draft);
     }
 
     router.push(nextHref);
+  }
+
+  if (isLoadingDraft) {
+    return (
+      <div className="empty-card">
+        <h2>Hämtar rondutkast...</h2>
+        <p className="muted">Vänta ett ögonblick medan vi letar efter sparad score.</p>
+      </div>
+    );
   }
 
   if (!setup || !draft) {
@@ -524,6 +624,12 @@ export function RoundEntryStep({
       {formError ? (
         <div aria-live="assertive" className="form-error" role="alert">
           {formError}
+        </div>
+      ) : null}
+
+      {autosaveError ? (
+        <div aria-live="polite" className="form-error" role="status">
+          {autosaveError}
         </div>
       ) : null}
 
