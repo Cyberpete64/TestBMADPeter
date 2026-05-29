@@ -15,9 +15,15 @@ import {
   type RoundEntryDraft,
 } from "@/lib/round-entry";
 import {
+  getHandicapCalculationGenderLabel,
+  getTeeRating,
+} from "@/lib/golf-course-data";
+import { isValidHandicapInput, parseHandicapInput } from "@/lib/handicap";
+import {
   clearRoundSetupFromStorage,
   persistRoundSetupToStorage,
 } from "@/lib/round-setup";
+import { calculatePlayingHandicap } from "@/lib/scoring";
 
 export function RoundReviewHandoff() {
   const router = useRouter();
@@ -74,6 +80,28 @@ export function RoundReviewHandoff() {
       }),
       { strokes: 0, putts: 0 },
     );
+  }, [draft]);
+
+  const handicapSummary = useMemo(() => {
+    if (!draft || !isValidHandicapInput(draft.setup.enteredHandicap)) {
+      return null;
+    }
+
+    const teeRating = getTeeRating(
+      draft.setup.teeCode,
+      draft.setup.handicapCalculationGender,
+    );
+
+    return {
+      label: getHandicapCalculationGenderLabel(
+        draft.setup.handicapCalculationGender,
+      ),
+      playingHandicap: calculatePlayingHandicap(
+        parseHandicapInput(draft.setup.enteredHandicap),
+        teeRating,
+      ),
+      teeRating,
+    };
   }, [draft]);
 
   function handleSaveRound() {
@@ -162,6 +190,25 @@ export function RoundReviewHandoff() {
             <span className="muted">Registrerat handicap</span>
             <strong>{draft.setup.enteredHandicap}</strong>
           </div>
+          {handicapSummary ? (
+            <>
+              <div className="summary-row">
+                <span className="muted">HCP-tabell</span>
+                <strong>{handicapSummary.label}</strong>
+              </div>
+              <div className="summary-row">
+                <span className="muted">Spelhandicap</span>
+                <strong>{handicapSummary.playingHandicap}</strong>
+              </div>
+              <div className="summary-row">
+                <span className="muted">CR/Slope</span>
+                <strong>
+                  {handicapSummary.teeRating.courseRating} /{" "}
+                  {handicapSummary.teeRating.slopeRating}
+                </strong>
+              </div>
+            </>
+          ) : null}
           <div className="summary-row">
             <span className="muted">Totalt registrerade slag</span>
             <strong>{totals.strokes}</strong>

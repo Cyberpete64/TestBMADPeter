@@ -1,3 +1,5 @@
+import type { HandicapCalculationGender } from "@/lib/golf-course-data";
+
 export type PersistedHole = {
   holeNumber: number;
   par: number;
@@ -18,6 +20,11 @@ export type PersistedRound = {
   teeCode: "red" | "yellow";
   teeLabel: string;
   enteredHandicap: number;
+  handicapCalculationGender: HandicapCalculationGender;
+  playingHandicap: number;
+  courseRating: number;
+  slopeRating: number;
+  coursePar: number;
   totalScore: number;
   totalPutts: number;
   totalStablefordPoints: number;

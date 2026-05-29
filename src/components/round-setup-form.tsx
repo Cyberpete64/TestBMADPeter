@@ -8,7 +8,13 @@ import {
   getActiveRoundDraftAction,
   saveActiveRoundDraftAction,
 } from "@/app/rounds/new/draft/actions";
-import { availableTees, primaryCourse } from "@/lib/golf-course-data";
+import {
+  availableTees,
+  defaultHandicapCalculationGender,
+  handicapCalculationGenders,
+  primaryCourse,
+  type HandicapCalculationGender,
+} from "@/lib/golf-course-data";
 import {
   isValidHandicapInput,
   normalizeHandicapInput,
@@ -30,6 +36,7 @@ const roundSetupSchema = z.object({
   playedOn: z.string().trim().min(1, "Välj speldatum."),
   courseSlug: z.literal(primaryCourse.slug),
   teeCode: z.enum(["red", "yellow"]),
+  handicapCalculationGender: z.enum(["men", "women"]),
   enteredHandicap: z
     .string()
     .trim()
@@ -47,6 +54,7 @@ const defaultValues: RoundSetupFormValues = {
   playedOn: new Date().toISOString().slice(0, 10),
   courseSlug: primaryCourse.slug,
   teeCode: "yellow",
+  handicapCalculationGender: defaultHandicapCalculationGender,
   enteredHandicap: "",
 };
 
@@ -61,6 +69,7 @@ function getFormValuesFromSetup(setup: RoundSetup): RoundSetupFormValues {
     playedOn: setup.playedOn,
     courseSlug: setup.courseSlug,
     teeCode: setup.teeCode,
+    handicapCalculationGender: setup.handicapCalculationGender,
     enteredHandicap: setup.enteredHandicap,
   };
 }
@@ -179,6 +188,7 @@ export function RoundSetupForm() {
       courseShortLabel: primaryCourse.shortLabel,
       teeCode: parsed.data.teeCode,
       teeLabel: selectedTee.label,
+      handicapCalculationGender: parsed.data.handicapCalculationGender,
       enteredHandicap: normalizeHandicapInput(parsed.data.enteredHandicap),
     };
 
@@ -277,7 +287,9 @@ export function RoundSetupForm() {
           )}
           aria-invalid={Boolean(fieldErrors.teeCode)}
           value={values.teeCode}
-          onChange={(event) => updateValue("teeCode", event.target.value as "red" | "yellow")}
+          onChange={(event) =>
+            updateValue("teeCode", event.target.value as "red" | "yellow")
+          }
         >
           {availableTees.map((tee) => (
             <option key={tee.code} value={tee.code}>
@@ -290,6 +302,27 @@ export function RoundSetupForm() {
             {fieldErrors.teeCode}
           </div>
         ) : null}
+      </div>
+
+      <div className="field">
+        <label htmlFor="handicapCalculationGender">HCP-tabell</label>
+        <select
+          id="handicapCalculationGender"
+          name="handicapCalculationGender"
+          value={values.handicapCalculationGender}
+          onChange={(event) =>
+            updateValue(
+              "handicapCalculationGender",
+              event.target.value as HandicapCalculationGender,
+            )
+          }
+        >
+          {handicapCalculationGenders.map((gender) => (
+            <option key={gender.code} value={gender.code}>
+              {gender.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="field">

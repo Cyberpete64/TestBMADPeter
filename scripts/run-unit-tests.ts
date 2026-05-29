@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 
 import { calculateDashboardInsights } from "../src/lib/dashboard-insights-core.ts";
 import { getDistanceMeters } from "../src/lib/geo-distance.ts";
-import { getReceivedStrokes, getStablefordPoints } from "../src/lib/scoring.ts";
+import {
+  calculatePlayingHandicap,
+  getReceivedStrokes,
+  getStablefordPoints,
+} from "../src/lib/scoring.ts";
 
 function runTest(name: string, assertion: () => void) {
   try {
@@ -28,6 +32,31 @@ runTest("returns base handicap strokes evenly for multiples of 18", () => {
   assert.equal(getReceivedStrokes(1, 36), 2);
   assert.equal(getReceivedStrokes(9, 36), 2);
   assert.equal(getReceivedStrokes(18, 36), 2);
+});
+
+runTest("allocates plus handicap strokes back from easiest indexed holes", () => {
+  assert.equal(getReceivedStrokes(14, -4), 0);
+  assert.equal(getReceivedStrokes(15, -4), -1);
+  assert.equal(getReceivedStrokes(18, -4), -1);
+});
+
+runTest("calculates playing handicap from WHS tee rating values", () => {
+  assert.equal(
+    calculatePlayingHandicap(18.4, {
+      courseRating: 73.6,
+      slopeRating: 143,
+      par: 73,
+    }),
+    24,
+  );
+  assert.equal(
+    calculatePlayingHandicap(0, {
+      courseRating: 68.6,
+      slopeRating: 133,
+      par: 73,
+    }),
+    -4,
+  );
 });
 
 runTest("stableford points never drop below zero", () => {

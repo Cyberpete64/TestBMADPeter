@@ -7,8 +7,10 @@ import { useMemo, useState, useTransition } from "react";
 import { updateRoundDraftAction } from "@/app/rounds/[id]/actions";
 import {
   availableTees,
+  handicapCalculationGenders,
   getHoleReferencesForTee,
   primaryCourse,
+  type HandicapCalculationGender,
 } from "@/lib/golf-course-data";
 import {
   isValidHandicapInput,
@@ -26,6 +28,7 @@ type SetupFieldErrors = {
   playerName?: string;
   playedOn?: string;
   teeCode?: string;
+  handicapCalculationGender?: string;
   enteredHandicap?: string;
 };
 
@@ -68,14 +71,24 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
       field === "teeCode"
         ? (normalizedValue as RoundEntryDraft["setup"]["teeCode"])
         : draft.setup.teeCode;
+    const handicapCalculationGender =
+      field === "handicapCalculationGender"
+        ? (normalizedValue as HandicapCalculationGender)
+        : draft.setup.handicapCalculationGender;
 
     setDraft((current) => ({
       ...current,
       setup: {
         ...current.setup,
-        [field]: field === "teeCode" ? teeCode : normalizedValue,
+        [field]:
+          field === "teeCode"
+            ? teeCode
+            : field === "handicapCalculationGender"
+              ? handicapCalculationGender
+              : normalizedValue,
         teeCode,
         teeLabel: getSelectedTeeLabel(teeCode),
+        handicapCalculationGender,
         courseSlug: primaryCourse.slug,
         courseLabel: primaryCourse.displayName,
         courseShortLabel: primaryCourse.shortLabel,
@@ -85,6 +98,7 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
       field === "playerName" ||
       field === "playedOn" ||
       field === "teeCode" ||
+      field === "handicapCalculationGender" ||
       field === "enteredHandicap"
     ) {
       setSetupErrors((current) => ({
@@ -375,6 +389,23 @@ export function RoundEditForm({ round }: RoundEditFormProps) {
                 {setupErrors.teeCode}
               </div>
             ) : null}
+          </div>
+
+          <div className="field">
+            <label htmlFor="handicapCalculationGender">HCP-tabell</label>
+            <select
+              id="handicapCalculationGender"
+              value={draft.setup.handicapCalculationGender}
+              onChange={(event) =>
+                updateSetupField("handicapCalculationGender", event.target.value)
+              }
+            >
+              {handicapCalculationGenders.map((gender) => (
+                <option key={gender.code} value={gender.code}>
+                  {gender.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="field">

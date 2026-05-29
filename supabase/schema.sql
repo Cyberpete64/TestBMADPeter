@@ -11,11 +11,38 @@ create table if not exists public.rounds (
   tee_code text not null check (tee_code in ('red', 'yellow')),
   tee_label text not null,
   entered_handicap numeric(5, 1) not null,
+  handicap_calculation_gender text check (handicap_calculation_gender in ('men', 'women')),
+  playing_handicap smallint,
+  course_rating numeric(4, 1),
+  slope_rating smallint,
+  course_par smallint,
   total_score integer not null,
   total_putts integer not null,
   total_stableford_points integer not null,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.rounds
+  add column if not exists handicap_calculation_gender text;
+
+alter table public.rounds
+  add column if not exists playing_handicap smallint;
+
+alter table public.rounds
+  add column if not exists course_rating numeric(4, 1);
+
+alter table public.rounds
+  add column if not exists slope_rating smallint;
+
+alter table public.rounds
+  add column if not exists course_par smallint;
+
+alter table public.rounds
+  drop constraint if exists rounds_handicap_calculation_gender_check;
+
+alter table public.rounds
+  add constraint rounds_handicap_calculation_gender_check
+  check (handicap_calculation_gender in ('men', 'women'));
 
 create table if not exists public.round_holes (
   round_id uuid not null references public.rounds (id) on delete cascade,

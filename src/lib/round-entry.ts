@@ -8,7 +8,7 @@ import {
   type HoleReference,
   type TeeCode,
 } from "@/lib/golf-course-data";
-import type { RoundSetup } from "@/lib/round-setup";
+import { normalizeRoundSetup, type RoundSetup } from "@/lib/round-setup";
 
 export type HoleEntry = {
   holeNumber: number;
@@ -27,11 +27,16 @@ export function canReuseRoundEntryDraft(
   draft: RoundEntryDraft,
   setup: RoundSetup,
 ) {
+  const normalizedDraftSetup = normalizeRoundSetup(draft.setup);
+  const normalizedSetup = normalizeRoundSetup(setup);
+
   return (
-    draft.setup.courseSlug === setup.courseSlug &&
-    draft.setup.playedOn === setup.playedOn &&
-    draft.setup.playerName === setup.playerName &&
-    draft.setup.teeCode === setup.teeCode
+    normalizedDraftSetup.courseSlug === normalizedSetup.courseSlug &&
+    normalizedDraftSetup.playedOn === normalizedSetup.playedOn &&
+    normalizedDraftSetup.playerName === normalizedSetup.playerName &&
+    normalizedDraftSetup.teeCode === normalizedSetup.teeCode &&
+    normalizedDraftSetup.handicapCalculationGender ===
+      normalizedSetup.handicapCalculationGender
   );
 }
 
@@ -45,13 +50,19 @@ export function createInitialHoleEntries(teeCode: TeeCode): HoleEntry[] {
 
 export function createRoundEntryDraft(setup: RoundSetup): RoundEntryDraft {
   return {
-    setup,
+    setup: normalizeRoundSetup(setup),
     holes: createInitialHoleEntries(setup.teeCode),
   };
 }
 
 export function persistRoundEntryDraft(draft: RoundEntryDraft) {
-  writeDurableClientItem(STORAGE_KEY, JSON.stringify(draft));
+  writeDurableClientItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      ...draft,
+      setup: normalizeRoundSetup(draft.setup),
+    }),
+  );
 }
 
 export function clearRoundEntryDraft() {
@@ -66,7 +77,12 @@ export function readRoundEntryDraft(): RoundEntryDraft | null {
   }
 
   try {
-    return JSON.parse(rawValue) as RoundEntryDraft;
+    const parsedDraft = JSON.parse(rawValue) as RoundEntryDraft;
+
+    return {
+      ...parsedDraft,
+      setup: normalizeRoundSetup(parsedDraft.setup),
+    };
   } catch {
     return null;
   }
@@ -78,7 +94,7 @@ export function ensureRoundEntryDraft(setup: RoundSetup): RoundEntryDraft {
   if (existing && canReuseRoundEntryDraft(existing, setup)) {
     const nextDraft = {
       ...existing,
-      setup,
+      setup: normalizeRoundSetup(setup),
     };
     persistRoundEntryDraft(nextDraft);
     return nextDraft;

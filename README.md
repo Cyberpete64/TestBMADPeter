@@ -10,7 +10,7 @@ Mobile-first web app for logging 18-hole golf rounds at Östersund-Frösö Golfk
 - Red and yellow tees
 - Full 18-hole rounds
 - Hole-by-hole entry for strokes and putts
-- Automatic Stableford scoring
+- Automatic Stableford scoring using tee-specific CR/Slope to calculate playing handicap
 - Live GPS distance to front, center, and back of green during round entry
 - Round history with create, review, edit, and delete flows
 - Dashboard with:
@@ -120,7 +120,7 @@ Saved rounds are stored in Supabase tables for the authenticated user. Round dra
 - One course only
 - Red and yellow tees only
 - Full 18-hole rounds only
-- No official handicap index recalculation yet
+- No official handicap index recalculation from saved scores yet
 - No multi-player round entry yet
 - GPS distance is straight-line distance only and depends on the device, browser permission, and current signal accuracy
 - iPhone GPS in Safari/PWA requires a secure origin such as HTTPS for real device use

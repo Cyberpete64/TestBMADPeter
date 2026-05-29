@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { getHandicapCalculationGenderLabel } from "@/lib/golf-course-data";
 import {
   readRoundSetupFromStorage,
   type RoundSetup,
@@ -62,6 +63,14 @@ export function FrontNineSetupSummary() {
           <div className="summary-row">
             <span className="muted">Registrerat handicap</span>
             <strong>{setup.enteredHandicap}</strong>
+          </div>
+          <div className="summary-row">
+            <span className="muted">HCP-tabell</span>
+            <strong>
+              {getHandicapCalculationGenderLabel(
+                setup.handicapCalculationGender,
+              )}
+            </strong>
           </div>
         </div>
       </div>

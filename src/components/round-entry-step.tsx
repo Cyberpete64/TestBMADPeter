@@ -8,7 +8,10 @@ import {
   getActiveRoundDraftAction,
   saveActiveRoundDraftAction,
 } from "@/app/rounds/new/draft/actions";
-import type { HoleReference } from "@/lib/golf-course-data";
+import {
+  getHandicapCalculationGenderLabel,
+  type HoleReference,
+} from "@/lib/golf-course-data";
 import type { GeoPoint } from "@/lib/geo-distance";
 import {
   formatDistanceMeters,
@@ -504,6 +507,14 @@ export function RoundEntryStep({
           <div className="summary-row">
             <span className="muted">Registrerat handicap</span>
             <strong>{setup.enteredHandicap}</strong>
+          </div>
+          <div className="summary-row">
+            <span className="muted">HCP-tabell</span>
+            <strong>
+              {getHandicapCalculationGenderLabel(
+                setup.handicapCalculationGender,
+              )}
+            </strong>
           </div>
         </div>
 

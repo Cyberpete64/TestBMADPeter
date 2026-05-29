@@ -1,8 +1,16 @@
 import "server-only";
 
 import { requireCurrentUser } from "@/lib/auth";
-import { availableTees, primaryCourse } from "@/lib/golf-course-data";
+import {
+  availableTees,
+  defaultHandicapCalculationGender,
+  getTeeRating,
+  isHandicapCalculationGender,
+  primaryCourse,
+  type HandicapCalculationGender,
+} from "@/lib/golf-course-data";
 import type { PersistedHole, PersistedRound } from "@/lib/round-domain";
+import { calculatePlayingHandicap } from "@/lib/scoring";
 
 type RoundRow = {
   id: string;
@@ -15,6 +23,11 @@ type RoundRow = {
   tee_code: "red" | "yellow";
   tee_label: string;
   entered_handicap: number;
+  handicap_calculation_gender: HandicapCalculationGender | null;
+  playing_handicap: number | null;
+  course_rating: number | null;
+  slope_rating: number | null;
+  course_par: number | null;
   total_score: number;
   total_putts: number;
   total_stableford_points: number;
@@ -65,6 +78,11 @@ function mapRoundRow(round: PersistedRound, userId: string): RoundRow {
     tee_code: normalizedRound.teeCode,
     tee_label: normalizedRound.teeLabel,
     entered_handicap: normalizedRound.enteredHandicap,
+    handicap_calculation_gender: normalizedRound.handicapCalculationGender,
+    playing_handicap: normalizedRound.playingHandicap,
+    course_rating: normalizedRound.courseRating,
+    slope_rating: normalizedRound.slopeRating,
+    course_par: normalizedRound.coursePar,
     total_score: normalizedRound.totalScore,
     total_putts: normalizedRound.totalPutts,
     total_stableford_points: normalizedRound.totalStablefordPoints,
@@ -98,6 +116,23 @@ function mapPersistedHole(row: RoundHoleRow): PersistedHole {
 }
 
 function mapPersistedRound(row: RoundWithHolesRow): PersistedRound {
+  const handicapCalculationGender = isHandicapCalculationGender(
+    row.handicap_calculation_gender,
+  )
+    ? row.handicap_calculation_gender
+    : defaultHandicapCalculationGender;
+  const teeRating = getTeeRating(row.tee_code, handicapCalculationGender);
+  const courseRating = row.course_rating ?? teeRating.courseRating;
+  const slopeRating = row.slope_rating ?? teeRating.slopeRating;
+  const coursePar = row.course_par ?? teeRating.par;
+  const playingHandicap =
+    row.playing_handicap ??
+    calculatePlayingHandicap(row.entered_handicap, {
+      courseRating,
+      slopeRating,
+      par: coursePar,
+    });
+
   return normalizeRound({
     id: row.id,
     playerName: row.player_name,
@@ -108,6 +143,11 @@ function mapPersistedRound(row: RoundWithHolesRow): PersistedRound {
     teeCode: row.tee_code,
     teeLabel: row.tee_label,
     enteredHandicap: row.entered_handicap,
+    handicapCalculationGender,
+    playingHandicap,
+    courseRating,
+    slopeRating,
+    coursePar,
     totalScore: row.total_score,
     totalPutts: row.total_putts,
     totalStablefordPoints: row.total_stableford_points,
@@ -196,7 +236,7 @@ export async function getRounds() {
   const { data, error } = await supabase
     .from("rounds")
     .select(
-      "id,user_id,player_name,played_on,course_slug,course_label,course_short_label,tee_code,tee_label,entered_handicap,total_score,total_putts,total_stableford_points,created_at,round_holes(round_id,hole_number,par,stroke_index,strokes,putts,received_strokes,stableford_points)",
+      "id,user_id,player_name,played_on,course_slug,course_label,course_short_label,tee_code,tee_label,entered_handicap,handicap_calculation_gender,playing_handicap,course_rating,slope_rating,course_par,total_score,total_putts,total_stableford_points,created_at,round_holes(round_id,hole_number,par,stroke_index,strokes,putts,received_strokes,stableford_points)",
     )
     .eq("user_id", user.id)
     .order("played_on", { ascending: false })
@@ -214,7 +254,7 @@ export async function getRoundById(id: string) {
   const { data, error } = await supabase
     .from("rounds")
     .select(
-      "id,user_id,player_name,played_on,course_slug,course_label,course_short_label,tee_code,tee_label,entered_handicap,total_score,total_putts,total_stableford_points,created_at,round_holes(round_id,hole_number,par,stroke_index,strokes,putts,received_strokes,stableford_points)",
+      "id,user_id,player_name,played_on,course_slug,course_label,course_short_label,tee_code,tee_label,entered_handicap,handicap_calculation_gender,playing_handicap,course_rating,slope_rating,course_par,total_score,total_putts,total_stableford_points,created_at,round_holes(round_id,hole_number,par,stroke_index,strokes,putts,received_strokes,stableford_points)",
     )
     .eq("id", id)
     .eq("user_id", user.id)

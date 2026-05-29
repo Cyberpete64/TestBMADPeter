@@ -16,6 +16,59 @@ export const availableTees = [
 
 export type TeeCode = (typeof availableTees)[number]["code"];
 
+export const handicapCalculationGenders = [
+  { code: "men", label: "Herrar" },
+  { code: "women", label: "Damer" },
+] as const;
+
+export type HandicapCalculationGender =
+  (typeof handicapCalculationGenders)[number]["code"];
+
+export const defaultHandicapCalculationGender: HandicapCalculationGender = "men";
+
+export type TeeRating = {
+  courseRating: number;
+  slopeRating: number;
+  par: number;
+};
+
+const teeRatings: Record<
+  HandicapCalculationGender,
+  Record<TeeCode, TeeRating>
+> = {
+  men: {
+    // Ostersund-Froso GK 18-hole slope/rating table, checked May 27, 2026.
+    yellow: { courseRating: 73.6, slopeRating: 143, par: 73 },
+    red: { courseRating: 68.6, slopeRating: 133, par: 73 },
+  },
+  women: {
+    yellow: { courseRating: 80, slopeRating: 141, par: 73 },
+    red: { courseRating: 73.8, slopeRating: 129, par: 73 },
+  },
+};
+
+export function isHandicapCalculationGender(
+  value: unknown,
+): value is HandicapCalculationGender {
+  return handicapCalculationGenders.some((gender) => gender.code === value);
+}
+
+export function getHandicapCalculationGenderLabel(
+  gender: HandicapCalculationGender,
+) {
+  return (
+    handicapCalculationGenders.find((item) => item.code === gender)?.label ??
+    "Herrar"
+  );
+}
+
+export function getTeeRating(
+  teeCode: TeeCode,
+  handicapCalculationGender: HandicapCalculationGender,
+) {
+  return teeRatings[handicapCalculationGender][teeCode];
+}
+
 export type GreenTarget = {
   front: GeoPoint;
   center: GeoPoint;

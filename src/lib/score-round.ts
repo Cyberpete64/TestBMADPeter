@@ -1,7 +1,16 @@
 import type { PersistedHole, PersistedRound } from "@/lib/round-domain";
 import { getHoleReferencesForDraft, type RoundEntryDraft } from "@/lib/round-entry";
 import { parseHandicapInput } from "@/lib/handicap";
-import { getReceivedStrokes, getStablefordPoints } from "./scoring";
+import {
+  getTeeRating,
+  isHandicapCalculationGender,
+  defaultHandicapCalculationGender,
+} from "@/lib/golf-course-data";
+import {
+  calculatePlayingHandicap,
+  getReceivedStrokes,
+  getStablefordPoints,
+} from "./scoring";
 
 export function scoreRoundDraft(
   draft: RoundEntryDraft,
@@ -9,7 +18,13 @@ export function scoreRoundDraft(
   createdAt: string,
 ): PersistedRound {
   const parsedHandicap = parseHandicapInput(draft.setup.enteredHandicap);
-  const handicapStrokes = Math.floor(parsedHandicap);
+  const handicapCalculationGender = isHandicapCalculationGender(
+    draft.setup.handicapCalculationGender,
+  )
+    ? draft.setup.handicapCalculationGender
+    : defaultHandicapCalculationGender;
+  const teeRating = getTeeRating(draft.setup.teeCode, handicapCalculationGender);
+  const playingHandicap = calculatePlayingHandicap(parsedHandicap, teeRating);
   const holeReferences = getHoleReferencesForDraft(draft);
 
   const holes: PersistedHole[] = holeReferences.map((holeReference) => {
@@ -21,7 +36,7 @@ export function scoreRoundDraft(
     const putts = Number(entry?.putts ?? 0);
     const receivedStrokes = getReceivedStrokes(
       holeReference.strokeIndex,
-      handicapStrokes,
+      playingHandicap,
     );
     const stablefordPoints = getStablefordPoints(
       holeReference.par,
@@ -57,6 +72,11 @@ export function scoreRoundDraft(
     teeCode: draft.setup.teeCode,
     teeLabel: draft.setup.teeLabel,
     enteredHandicap: parsedHandicap,
+    handicapCalculationGender,
+    playingHandicap,
+    courseRating: teeRating.courseRating,
+    slopeRating: teeRating.slopeRating,
+    coursePar: teeRating.par,
     totalScore,
     totalPutts,
     totalStablefordPoints,

@@ -1,5 +1,6 @@
 import type { PersistedRound } from "@/lib/round-domain";
 import { formatHandicapValue } from "@/lib/handicap";
+import { getHandicapCalculationGenderLabel } from "@/lib/golf-course-data";
 
 type RoundDetailViewProps = {
   round: PersistedRound;
@@ -35,6 +36,24 @@ export function RoundDetailView({ round }: RoundDetailViewProps) {
           <article className="stat-card">
             <div className="stat-label">Registrerat handicap</div>
             <div className="stat-value">{formatHandicapValue(round.enteredHandicap)}</div>
+          </article>
+          <article className="stat-card">
+            <div className="stat-label">Spelhandicap</div>
+            <div className="stat-value">{round.playingHandicap}</div>
+          </article>
+          <article className="stat-card">
+            <div className="stat-label">HCP-tabell</div>
+            <div className="stat-value">
+              {getHandicapCalculationGenderLabel(
+                round.handicapCalculationGender,
+              )}
+            </div>
+          </article>
+          <article className="stat-card">
+            <div className="stat-label">CR/Slope</div>
+            <div className="stat-value">
+              {round.courseRating} / {round.slopeRating}
+            </div>
           </article>
         </div>
       </section>
