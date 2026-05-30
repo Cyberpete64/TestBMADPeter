@@ -7,6 +7,7 @@ import {
   getReceivedStrokes,
   getStablefordPoints,
 } from "../src/lib/scoring.ts";
+import { normalizeRoundEntryDraft } from "../src/lib/round-entry.ts";
 
 function runTest(name: string, assertion: () => void) {
   try {
@@ -205,6 +206,57 @@ runTest("dashboard coaching compares recent rounds with overall trends", () => {
   assert.equal(insights.coachingInsights.length, 4);
   assert.equal(insights.coachingInsights[0]?.title, "Senaste 2 mot totalen");
   assert.equal(insights.coachingInsights[2]?.value, "#1");
+});
+
+runTest("normalizes partial round drafts to a safe 18-hole draft", () => {
+  const draft = normalizeRoundEntryDraft({
+    setup: {
+      playerName: "Peter",
+      playedOn: "2026-05-30",
+      courseSlug: "ofg",
+      courseLabel: "Old label",
+      courseShortLabel: "Old",
+      teeCode: "yellow",
+      teeLabel: "Gul tee",
+      enteredHandicap: "18,4",
+      handicapCalculationGender: "men",
+    },
+    holes: [
+      { holeNumber: 1, strokes: 5, putts: "2" },
+      { holeNumber: 10, strokes: "4 slag", putts: null },
+      { holeNumber: 99, strokes: "8", putts: "3" },
+    ],
+  });
+
+  assert.ok(draft);
+  assert.equal(draft.holes.length, 18);
+  assert.deepEqual(draft.holes[0], {
+    holeNumber: 1,
+    strokes: "5",
+    putts: "2",
+  });
+  assert.deepEqual(draft.holes[9], {
+    holeNumber: 10,
+    strokes: "4",
+    putts: "",
+  });
+  assert.deepEqual(draft.holes[17], {
+    holeNumber: 18,
+    strokes: "",
+    putts: "",
+  });
+});
+
+runTest("rejects round drafts without a supported tee", () => {
+  assert.equal(
+    normalizeRoundEntryDraft({
+      setup: {
+        teeCode: "blue",
+      },
+      holes: [],
+    }),
+    null,
+  );
 });
 
 console.log("All automated checks passed.");

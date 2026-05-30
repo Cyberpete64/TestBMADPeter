@@ -1,7 +1,10 @@
 import "server-only";
 
 import { normalizeDraftCourseMetadata } from "@/lib/round-drafts";
-import type { RoundEntryDraft } from "@/lib/round-entry";
+import {
+  normalizeRoundEntryDraft,
+  type RoundEntryDraft,
+} from "@/lib/round-entry";
 import { createClient } from "@/lib/supabase/server";
 
 type DraftClient = {
@@ -48,7 +51,18 @@ export async function getActiveRoundDraft() {
     return null;
   }
 
-  return normalizeDraftCourseMetadata((data as RoundDraftRow).draft);
+  const normalizedDraft = normalizeRoundEntryDraft((data as RoundDraftRow).draft);
+
+  if (!normalizedDraft) {
+    await client.supabase
+      .from("round_drafts")
+      .delete()
+      .eq("user_id", client.userId);
+
+    return null;
+  }
+
+  return normalizeDraftCourseMetadata(normalizedDraft);
 }
 
 export async function saveActiveRoundDraft(draft: RoundEntryDraft) {

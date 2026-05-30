@@ -2,13 +2,16 @@ import {
   readDurableClientItem,
   removeDurableClientItem,
   writeDurableClientItem,
-} from "@/lib/browser-storage";
+} from "./browser-storage.ts";
 import {
   getHoleReferencesForTee,
   type HoleReference,
   type TeeCode,
-} from "@/lib/golf-course-data";
-import { normalizeRoundSetup, type RoundSetup } from "@/lib/round-setup";
+} from "./golf-course-data.ts";
+import {
+  normalizeRoundSetup,
+  type RoundSetup,
+} from "./round-setup.ts";
 
 export type HoleEntry = {
   holeNumber: number;
@@ -22,6 +25,94 @@ export type RoundEntryDraft = {
 };
 
 const STORAGE_KEY = "golf-round-tracker/round-entry";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeDraftText(value: unknown) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return "";
+}
+
+function normalizeHoleInput(value: unknown) {
+  return normalizeDraftText(value).replace(/[^\d]/g, "");
+}
+
+function normalizeDraftTeeCode(value: unknown): TeeCode | null {
+  return value === "red" || value === "yellow" ? value : null;
+}
+
+function normalizeHoleEntry(value: unknown): HoleEntry | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const holeNumber = Number(value.holeNumber);
+
+  if (!Number.isInteger(holeNumber) || holeNumber < 1 || holeNumber > 18) {
+    return null;
+  }
+
+  return {
+    holeNumber,
+    strokes: normalizeHoleInput(value.strokes),
+    putts: normalizeHoleInput(value.putts),
+  };
+}
+
+export function normalizeRoundEntryDraft(
+  value: unknown,
+): RoundEntryDraft | null {
+  if (!isRecord(value) || !isRecord(value.setup)) {
+    return null;
+  }
+
+  const teeCode = normalizeDraftTeeCode(value.setup.teeCode);
+
+  if (!teeCode) {
+    return null;
+  }
+
+  const setup = normalizeRoundSetup({
+    playerName: normalizeDraftText(value.setup.playerName),
+    playedOn: normalizeDraftText(value.setup.playedOn),
+    courseSlug: normalizeDraftText(value.setup.courseSlug),
+    courseLabel: normalizeDraftText(value.setup.courseLabel),
+    courseShortLabel: normalizeDraftText(value.setup.courseShortLabel),
+    teeCode,
+    teeLabel: normalizeDraftText(value.setup.teeLabel),
+    enteredHandicap: normalizeDraftText(value.setup.enteredHandicap),
+    handicapCalculationGender: normalizeDraftText(
+      value.setup.handicapCalculationGender,
+    ) as RoundSetup["handicapCalculationGender"],
+  });
+  const validEntriesByHole = new Map<number, HoleEntry>();
+
+  if (Array.isArray(value.holes)) {
+    for (const item of value.holes) {
+      const entry = normalizeHoleEntry(item);
+
+      if (entry) {
+        validEntriesByHole.set(entry.holeNumber, entry);
+      }
+    }
+  }
+
+  return {
+    setup,
+    holes: createInitialHoleEntries(teeCode).map(
+      (entry) => validEntriesByHole.get(entry.holeNumber) ?? entry,
+    ),
+  };
+}
 
 export function canReuseRoundEntryDraft(
   draft: RoundEntryDraft,
@@ -56,11 +147,17 @@ export function createRoundEntryDraft(setup: RoundSetup): RoundEntryDraft {
 }
 
 export function persistRoundEntryDraft(draft: RoundEntryDraft) {
+  const normalizedDraft = normalizeRoundEntryDraft(draft);
+
+  if (!normalizedDraft) {
+    return;
+  }
+
   writeDurableClientItem(
     STORAGE_KEY,
     JSON.stringify({
-      ...draft,
-      setup: normalizeRoundSetup(draft.setup),
+      ...normalizedDraft,
+      setup: normalizeRoundSetup(normalizedDraft.setup),
     }),
   );
 }
@@ -77,13 +174,16 @@ export function readRoundEntryDraft(): RoundEntryDraft | null {
   }
 
   try {
-    const parsedDraft = JSON.parse(rawValue) as RoundEntryDraft;
+    const parsedDraft = JSON.parse(rawValue);
+    const normalizedDraft = normalizeRoundEntryDraft(parsedDraft);
 
-    return {
-      ...parsedDraft,
-      setup: normalizeRoundSetup(parsedDraft.setup),
-    };
+    if (!normalizedDraft) {
+      clearRoundEntryDraft();
+    }
+
+    return normalizedDraft;
   } catch {
+    clearRoundEntryDraft();
     return null;
   }
 }
@@ -106,9 +206,15 @@ export function ensureRoundEntryDraft(setup: RoundSetup): RoundEntryDraft {
 }
 
 export function isRoundEntryDraftComplete(draft: RoundEntryDraft) {
+  const normalizedDraft = normalizeRoundEntryDraft(draft);
+
+  if (!normalizedDraft) {
+    return false;
+  }
+
   return (
-    draft.holes.length === 18 &&
-    draft.holes.every(
+    normalizedDraft.holes.length === 18 &&
+    normalizedDraft.holes.every(
       (hole) => hole.strokes.trim() !== "" && hole.putts.trim() !== "",
     )
   );

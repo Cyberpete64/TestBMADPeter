@@ -2,12 +2,12 @@ import {
   readDurableClientItem,
   removeDurableClientItem,
   writeDurableClientItem,
-} from "@/lib/browser-storage";
+} from "./browser-storage.ts";
 import {
   defaultHandicapCalculationGender,
   isHandicapCalculationGender,
   type HandicapCalculationGender,
-} from "@/lib/golf-course-data";
+} from "./golf-course-data.ts";
 
 export type RoundSetup = {
   playerName: string;

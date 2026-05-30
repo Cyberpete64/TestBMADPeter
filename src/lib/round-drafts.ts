@@ -6,7 +6,10 @@ import {
 } from "@/lib/golf-course-data";
 import { formatHandicapValue } from "@/lib/handicap";
 import type { PersistedRound } from "@/lib/round-domain";
-import type { RoundEntryDraft } from "@/lib/round-entry";
+import {
+  normalizeRoundEntryDraft,
+  type RoundEntryDraft,
+} from "@/lib/round-entry";
 import { normalizeRoundSetup } from "@/lib/round-setup";
 
 export function createDraftFromPersistedRound(
@@ -37,16 +40,24 @@ export function createDraftFromPersistedRound(
 }
 
 export function normalizeDraftCourseMetadata(draft: RoundEntryDraft): RoundEntryDraft {
-  const tee = availableTees.find((item) => item.code === draft.setup.teeCode);
+  const normalizedDraft = normalizeRoundEntryDraft(draft);
+
+  if (!normalizedDraft) {
+    throw new Error("Invalid round draft.");
+  }
+
+  const tee = availableTees.find(
+    (item) => item.code === normalizedDraft.setup.teeCode,
+  );
 
   return {
-    ...draft,
+    ...normalizedDraft,
     setup: normalizeRoundSetup({
-      ...draft.setup,
+      ...normalizedDraft.setup,
       courseSlug: primaryCourse.slug,
       courseLabel: primaryCourse.displayName,
       courseShortLabel: primaryCourse.shortLabel,
-      teeLabel: tee?.label ?? draft.setup.teeLabel,
+      teeLabel: tee?.label ?? normalizedDraft.setup.teeLabel,
     }),
   };
 }
